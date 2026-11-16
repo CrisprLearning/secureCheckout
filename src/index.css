@@ -1,14 +1,513 @@
+/* Secure checkout. The look is the candidate portal's checkout page (candidatePortal/src/styles/pages/checkout.css
+   and base/tokens.css), so the two sites read as one product. */
+
 :root {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  color-scheme: light dark;
+  color-scheme: light;
+  --bg: #f3f7fa;
+  --panel: #ffffff;
+  --panel-soft: #f0f5fa;
+  --ink: #1e293b;
+  --ink-2: #334155;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --brand: #005f73;
+  --brand-deep: #004a5a;
+  --brand-soft: #d9eef1;
+  --teal: #2e9da1;
+  --good-deep: #146a62;
+  --good-soft: #dff5e3;
+  --bad-ink: #b0123f;
+  --bad-soft: #ffd6df;
+  --warn: #ffb703;
+  --warn-ink: #4a3000;
+  --radius: 22px;
+  --radius-sm: 14px;
+  --shadow: 0 1px 2px rgba(0, 95, 115, 0.05), 0 8px 24px rgba(0, 95, 115, 0.07);
 }
 
-body {
-  margin: 0;
+body { margin: 0; background: var(--bg); }
+
+.cp-checkout * { box-sizing: border-box; margin: 0; padding: 0; }
+/* Root of the checkout page (was a <body> class before the move to React). */
+.cp-checkout {
+  min-height: 100dvh;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg) radial-gradient(60% 50% at 100% 0%, rgba(0, 95, 115, 0.12), transparent 70%);
+  color: var(--ink);
+  padding: 20px 20px 40px;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+.cp-checkout button, .cp-checkout input, .cp-checkout select { font: inherit; color: inherit; }
+.cp-checkout img { max-width: 100%; display: block; }
+.cp-checkout a { color: var(--brand); font-weight: 700; }
+
+/* Header */
+.cp-checkout .header { text-align: center; padding: 18px 16px 22px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.cp-checkout .header img { max-width: 150px; height: auto; margin: 0 auto; }
+.cp-checkout .header small { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+/* Container */
+.cp-checkout .container {
+  display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;
+  max-width: 1080px; margin: 0 auto;
 }
 
-main {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
+/* Full-page loader */
+.cp-checkout .loaderScreen { border-radius: var(--radius); }
+
+/* Form section */
+.cp-checkout .form-section {
+  flex: 1.2; min-width: 300px; position: relative;
+  background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 24px 22px;
 }
+.cp-checkout h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--brand-deep); margin-bottom: 6px; }
+.cp-checkout-user { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.cp-checkout-user h2 { margin: 0; min-width: 0; }
+.cp-checkout-user .cp-avatar-wrap { width: 44px; height: 44px; }
+.cp-checkout h2 span { font-weight: 600; font-size: 14px; color: var(--muted); letter-spacing: 0; }
+.cp-checkout .form-section > .loginSection p, .cp-checkout .addressSection p { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+
+.cp-checkout input, .cp-checkout select {
+  width: 100%; padding: 13px 14px; margin-bottom: 12px;
+  border: 1.5px solid var(--line); border-radius: 14px; background: #fff;
+  font-size: 15px; font-weight: 600; outline: none; transition: border-color .15s;
+}
+.cp-checkout input:focus, .cp-checkout select:focus { border-color: var(--teal); }
+.cp-checkout input:disabled { background: var(--panel-soft); color: var(--muted); }
+.cp-checkout input::placeholder { color: #a3b1c2; font-weight: 500; }
+.cp-checkout .addressSection input:focus, .cp-checkout .apply-section input:focus { outline: none !important; }
+
+.cp-checkout .loginSection { margin-bottom: 26px; }
+
+/* Mobile number group */
+.cp-checkout .input-group {
+  display: flex; align-items: stretch; width: 100%;
+  border: 1.5px solid var(--line); border-radius: 16px; overflow: hidden; background: #fff;
+  margin: 16px 0 14px; transition: border-color .15s;
+}
+.cp-checkout .input-group:focus-within { border-color: var(--teal); }
+.cp-checkout .input-group input { border: none; border-radius: 0; margin: 0; padding: 15px 14px; font-size: 17px; flex: 1; min-width: 0; }
+.cp-checkout .input-group div {
+  display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 14px; min-width: 88px;
+  background: var(--brand-soft); color: var(--brand); font-weight: 700; border-right: 1.5px solid var(--line); white-space: nowrap;
+}
+
+/* OTP boxes */
+.cp-checkout .input-group.otp { border: none !important; background: transparent; gap: 10px; overflow: visible; justify-content: flex-start; }
+.cp-checkout .otp .otpEntry {
+  flex: 0 1 58px; min-width: 0; width: 58px; max-width: 58px; aspect-ratio: 1;
+  border: 1.5px solid var(--line) !important; border-radius: 16px !important; margin: 0 !important;
+  text-align: center; font-size: 26px; font-weight: 800; padding: 0;
+}
+.cp-checkout .otp .otpEntry:focus { border-color: var(--teal) !important; }
+
+/* Buttons */
+.cp-checkout .continue-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--brand); color: #fff; border: none; border-radius: 999px;
+  padding: 13px 24px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; max-width: 220px;
+  position: relative; text-align: center; transition: background .15s, transform .1s;
+}
+.cp-checkout .continue-btn:hover { background: var(--brand-deep); }
+.cp-checkout .continue-btn:active { transform: scale(.985); }
+.cp-checkout .continue-btn:disabled { opacity: .5; cursor: not-allowed; }
+.cp-checkout .continue-btn > span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+
+.cp-checkout .loginSection h2 { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.cp-checkout .logoutButton { font-size: 12px !important; font-weight: 700 !important; color: var(--bad-ink) !important; text-decoration: underline; cursor: pointer; margin: 0 !important; float: none !important; }
+
+.cp-checkout .mobileErrorHolder p { font-size: 12.5px; font-weight: 700; color: var(--bad-ink) !important; }
+
+/* Billing */
+.cp-checkout .addressSection { padding-top: 22px; border-top: 1px solid var(--line); }
+.cp-checkout .billing-group { display: flex; gap: 10px; }
+.cp-checkout .billing-group input, .cp-checkout .billing-group select { flex: 1; min-width: 0; }
+
+/* Terms */
+.cp-checkout .payment-section {
+  border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); font-weight: 500;
+  padding: 14px 0 0; margin-top: 22px; line-height: 1.6; position: static;
+}
+
+/* Summary section */
+.cp-checkout .summary-section {
+  flex: 1; min-width: 300px;
+  background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 24px 22px;
+  position: sticky; top: 16px;
+}
+.cp-checkout .summary-section h2 { margin-bottom: 14px; }
+
+.cp-checkout .summary-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; position: relative; font-size: 14px; color: var(--ink-2); }
+.cp-checkout .summary-item > span:first-child { min-width: 0; }
+.cp-checkout .summary-item > span:last-child { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.cp-checkout .cartItems { margin-bottom: 16px; }
+.cp-checkout .cartItems .summary-item { border-top: 1px solid var(--line); padding: 12px 0; margin: 0; }
+.cp-checkout .cartItems .summary-item:first-child { border-top: none; padding-top: 0; }
+.cp-checkout .summary-item-remove {
+  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--panel-soft); color: var(--muted); cursor: pointer; opacity: .8; transition: background .15s, color .15s;
+}
+.cp-checkout .summary-item-remove:hover { background: #ffd6df; color: var(--bad-ink); opacity: 1; }
+.cp-checkout .cartItems .summary-item .price { margin-right: 42px; }
+.cp-checkout .product-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cp-checkout .product-info img { width: 52px; height: 52px; object-fit: cover; border-radius: 14px; background: var(--panel-soft); flex-shrink: 0; }
+.cp-checkout .product-details { display: flex; flex-direction: column; min-width: 0; margin: 0; }
+.cp-checkout .product-name { font-weight: 700; font-size: 14.5px; color: var(--ink); line-height: 1.3; }
+.cp-checkout .product-size { font-size: 12.5px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.cp-checkout .price { font-weight: 700; white-space: nowrap; }
+.cp-checkout .total { font-weight: 800; font-size: 18px; color: var(--brand-deep); padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); }
+.cp-checkout .total .price { font-weight: 800; }
+.cp-checkout .superscript { font-size: 0.7em; vertical-align: super; }
+
+/* Gift code */
+.cp-checkout .apply-section { display: flex; gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+.cp-checkout .apply-section { margin-bottom: 14px; }
+.cp-checkout .apply-section:empty { display: none; }
+.cp-checkout .apply-section input, .cp-checkout .apply-section select, .cp-checkout .apply-section button { margin-bottom: 0 !important; }
+.cp-checkout .apply-btn {
+  width: auto; max-width: 140px; flex-shrink: 0;
+  background: var(--brand-soft); color: var(--brand); border: none; border-radius: 999px;
+  padding: 12px 18px; font-weight: 700; cursor: pointer; transition: background .15s;
+}
+.cp-checkout .apply-btn:hover { background: var(--brand); color: #fff; }
+
+/* Pay */
+.cp-checkout .pay-btn {
+  width: 100%; border: none; border-radius: 999px; padding: 15px 20px; margin: 18px 0 0;
+  background: var(--warn); color: var(--warn-ink); font-size: 15px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase;
+  cursor: pointer; transition: background .15s, transform .1s;
+}
+.cp-checkout .pay-btn:hover { background: #f0ab00; }
+.cp-checkout .pay-btn:active { transform: scale(.985); }
+.cp-checkout .pay-btn:disabled { background: var(--panel-soft); color: #a3b1c2; cursor: not-allowed; opacity: 1; border: none; }
+.cp-checkout .pay-hint { margin: 10px 0 0; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cp-checkout { padding: 12px 12px 28px; }
+  .cp-checkout .container { flex-direction: column; }
+  .cp-checkout .form-section, .cp-checkout .summary-section { padding: 20px 18px; position: static; }
+  .cp-checkout .billing-group, .cp-checkout .apply-section { flex-direction: column; }
+  .cp-checkout .apply-btn { max-width: none; }
+  .cp-checkout .continue-btn { max-width: none; }
+}
+
+/* Loader */
+.cp-checkout .loader {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.45); border-top-color: var(--warn);
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.cp-checkout .loaderScreen {
+  position: absolute; inset: 0; background: rgba(255, 255, 255, 0.9); border-radius: var(--radius); z-index: 1000;
+  display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: 700; color: var(--muted);
+}
+.cp-checkout .loaderScreen::after {
+  content: ""; display: inline-block; width: 22px; height: 22px; margin-left: 12px; border-radius: 50%;
+  border: 3px solid var(--brand-soft); border-top-color: var(--brand); animation: spin 1s linear infinite;
+}
+.cp-checkout .logoutButton { border: none; background: none; padding: 0; }
+.cp-checkout .mobileErrorHolder { position: relative; margin-top: 8px; min-height: 18px; }
+.cp-checkout .mobileErrorHolder p { margin: 0; text-align: left; }
+.cp-checkout .summary-item-remove { border: none; }
+.cp-checkout .summary-item.is-note { font-size: 10px; }
+.cp-checkout .cartSummary { margin-top: 4px; }
+.cp-checkout .empty-cart { font-size: 21px; font-weight: 300; text-align: center; width: 100%; margin: 50px 0; }
+.cp-checkout .empty-cart a { display: block; font-size: 70%; margin-top: 20px; }
+
+/* ── Additions for this app (not in the portal's checkout) ─────────────── */
+
+.cp-checkout .header a { display: block; }
+.cp-checkout .demo-banner {
+  max-width: 1080px; margin: 0 auto; padding: 8px 14px; border-radius: 999px;
+  background: var(--brand-deep); color: #fff; font-size: 12.5px; font-weight: 600; text-align: center;
+}
+.cp-checkout .container.is-loading { position: relative; min-height: 260px; }
+.cp-checkout .form-section.solo { flex: none; width: 100%; max-width: 560px; margin: 0 auto; }
+.cp-checkout .form-section.solo .loginSection { margin-bottom: 0; }
+.cp-checkout .form-section.is-centered { text-align: center; }
+.cp-checkout .form-section.is-centered .continue-btn { margin: 6px auto 0; text-decoration: none; }
+.cp-checkout .lead { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+.cp-checkout button { cursor: pointer; }
+.cp-checkout button:disabled { cursor: not-allowed; }
+.cp-checkout :focus-visible { outline: 2.5px solid var(--teal); outline-offset: 2px; }
+.cp-checkout input:focus-visible { outline: none; }
+
+/* Logged-in header: initial in place of the portal's profile photo */
+.cp-checkout .cp-avatar-wrap {
+  flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
+  background: var(--brand-soft); color: var(--brand); font-weight: 800; font-size: 18px;
+}
+.cp-checkout-user h2 { flex: 1; }
+.cp-checkout .logged-in-title { font: inherit; color: inherit; letter-spacing: inherit; }
+
+/* Passcode step links */
+.cp-checkout .otp-links { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 14px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.cp-checkout .text-btn { border: none; background: none; padding: 0; color: var(--brand); font-size: inherit; font-weight: 700; text-decoration: underline; }
+.cp-checkout .text-btn:disabled { opacity: .5; }
+
+/* Several items in the cart */
+.cp-checkout .cartItems .summary-item { align-items: flex-start; }
+.cp-checkout .cartItems.has-action .summary-item-remove { top: 12px; transform: none; }
+.cp-checkout .cartItems.has-action .summary-item:first-child .summary-item-remove { top: 0; }
+.cp-checkout .cartItems:not(.has-action) .summary-item .price { margin-right: 0; }
+.cp-checkout .cartItems .price { padding-top: 6px; }
+.cp-checkout .price.is-struck { text-decoration: line-through; color: var(--muted) !important; font-weight: 600 !important; }
+.cp-checkout .qty { display: inline-flex; gap: 6px; margin-top: 6px; }
+.cp-checkout .qty button {
+  width: 28px; height: 28px; border: none; border-radius: 50%; display: grid; place-items: center;
+  background: var(--panel-soft); color: var(--brand); font-size: 16px; font-weight: 800; line-height: 1;
+}
+.cp-checkout .qty button:disabled { color: #a3b1c2; }
+.cp-checkout .portal-btn { margin-top: 8px; padding: 8px 14px; font-size: 13px; align-self: flex-start; max-width: none; }
+.cp-checkout .apply-btn { text-decoration: none; text-align: center; }
+.cp-checkout .apply-btn:disabled { opacity: .5; }
+
+/* Confirmation and orders */
+.cp-checkout .confirm-head { text-align: center; margin-bottom: 18px; }
+.cp-checkout .status-mark {
+  width: 60px; height: 60px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--good-soft); color: var(--good-deep); font-size: 28px; font-weight: 800;
+}
+.cp-checkout .status-mark.is-muted { background: var(--brand-soft); color: var(--brand); }
+.cp-checkout .order-facts { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
+.cp-checkout .order-facts > div { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+.cp-checkout .order-facts dd { font-weight: 700; color: var(--ink); text-align: right; overflow-wrap: anywhere; }
+.cp-checkout .order-list { margin: 14px 0 0; }
+.cp-checkout .order-list .summary-item { align-items: center; }
+.cp-checkout .loader.is-dark { margin: 0 auto; border-color: var(--brand-soft); border-top-color: var(--brand); }
+
+/* Toaster and modal */
+.toaster {
+  position: fixed; left: 50%; bottom: 24px; z-index: 2000; transform: translate(-50%, 20px);
+  width: max-content; max-width: min(92vw, 420px); padding: 12px 18px; border-radius: 18px;
+  background: var(--ink); color: #fff; font: 600 13.5px/1.4 'Plus Jakarta Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  text-align: center; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+}
+.toaster.show { opacity: 1; transform: translate(-50%, 0); }
+.cp-checkout .modal-backdrop {
+  position: fixed; inset: 0; z-index: 1500; display: flex; align-items: center; justify-content: center;
+  padding: 16px; background: rgba(30, 41, 59, 0.55);
+}
+.cp-checkout .modal {
+  width: 100%; max-width: 400px; padding: 24px 22px; border-radius: var(--radius); background: var(--panel);
+  box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px;
+}
+.cp-checkout .modal p { color: var(--muted); font-size: 14px; margin-bottom: 6px; }
+.cp-checkout .modal .continue-btn, .cp-checkout .modal .apply-btn { max-width: none; width: 100%; }
+.cp-checkout .modal.is-status { align-items: center; text-align: center; }
+.cp-checkout .modal.is-status .loaderScreen { position: static; background: none; }
+
+@media (max-width: 768px) {
+  .cp-checkout .demo-banner { border-radius: var(--radius-sm); }
+}
+
+@media print {
+  .cp-checkout { background: #fff; padding: 0; }
+  .cp-checkout .demo-banner, .cp-checkout .no-print, .cp-checkout .portal-btn, .toaster { display: none !important; }
+  .cp-checkout .form-section { box-shadow: none; }
+}
+
+/* The pre-login note is one long sentence: let it wrap. */
+.cp-checkout .summary-item.is-note > span { white-space: normal; font-weight: 500; color: var(--muted); line-height: 1.5; }
+
+/* Payment failed: the counterpart of the success mark */
+.cp-checkout .status-mark.is-bad { background: var(--bad-soft); color: var(--bad-ink); }
+
+/* ── Responsive: tablets and phones ────────────────────────────────────── */
+
+/* Small laptops and landscape tablets: two columns, a little tighter. */
+@media (max-width: 1024px) {
+  .cp-checkout .form-section, .cp-checkout .summary-section { padding: 22px 20px; }
+  .cp-checkout .form-section { flex: 1.1; }
+}
+
+/* Portrait tablets and phones: one column, both panels the full width. */
+@media (max-width: 768px) {
+  .cp-checkout { padding: 12px max(12px, env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  .cp-checkout .container { align-items: stretch; max-width: 640px; }
+  .cp-checkout .form-section, .cp-checkout .summary-section { flex: none; width: 100%; min-width: 0; }
+  .cp-checkout .form-section.solo { max-width: none; }
+  .cp-checkout .header { padding: 12px 16px 16px; }
+  .cp-checkout .header img { max-width: 130px; }
+  .cp-checkout .demo-banner { max-width: 640px; }
+  /* 16px inputs stop iOS Safari zooming the page when a field is focused. */
+  .cp-checkout input, .cp-checkout select { font-size: 16px; }
+  /* Tablets have room for the address rows and the gift code row side by side. */
+  .cp-checkout .billing-group, .cp-checkout .apply-section { flex-direction: row; }
+  .cp-checkout .apply-btn { max-width: 140px; }
+  .cp-checkout .modal .apply-btn, .cp-checkout .portal-btn { max-width: none; }
+  /* Comfortable touch targets. */
+  .cp-checkout .summary-item-remove { width: 40px; height: 40px; }
+  .cp-checkout .cartItems .summary-item .price { margin-right: 48px; }
+  .cp-checkout .cartItems:not(.has-action) .summary-item .price { margin-right: 0; }
+  .cp-checkout .qty button { width: 36px; height: 36px; font-size: 18px; }
+  .cp-checkout .portal-btn { padding: 10px 16px; }
+  .cp-checkout .logoutButton { padding: 10px 0 10px 10px; }
+  .cp-checkout .text-btn { padding: 8px 0; }
+  .cp-checkout .otp-links { align-items: center; }
+}
+
+/* Phones: stack the form rows, tighten type, let long lines wrap. */
+@media (max-width: 480px) {
+  .cp-checkout { font-size: 14.5px; }
+  .cp-checkout .form-section, .cp-checkout .summary-section { padding: 18px 16px; border-radius: 18px; }
+  .cp-checkout h2 { font-size: 20px; }
+  .cp-checkout .billing-group, .cp-checkout .apply-section { flex-direction: column; }
+  .cp-checkout .billing-group { gap: 0; }
+  .cp-checkout .apply-btn { max-width: none; }
+  .cp-checkout .input-group div { min-width: 76px; padding: 0 10px; }
+  .cp-checkout .input-group.otp { gap: 8px; }
+  .cp-checkout .product-info { gap: 10px; }
+  .cp-checkout .product-info img { width: 44px; height: 44px; border-radius: 12px; }
+  .cp-checkout .product-name { font-size: 14px; overflow-wrap: anywhere; }
+  .cp-checkout .total { font-size: 17px; }
+  .cp-checkout .order-facts > div { gap: 12px; }
+  .cp-checkout .order-list .summary-item { flex-wrap: wrap; }
+  .cp-checkout .empty-cart { font-size: 18px; margin: 32px 0; }
+  .cp-checkout .confirm-head .status-mark { width: 52px; height: 52px; font-size: 24px; }
+  /* Dialogs rise from the bottom edge, within thumb reach. */
+  .cp-checkout .modal-backdrop { align-items: flex-end; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); }
+  .cp-checkout .modal { max-width: none; }
+  .toaster { bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
+
+/* Very narrow phones (320px): keep the passcode boxes and prices on one line. */
+@media (max-width: 340px) {
+  .cp-checkout .otp .otpEntry { flex-basis: 50px; font-size: 22px; }
+  .cp-checkout .cartItems .summary-item .price { margin-right: 44px; font-size: 13.5px; }
+}
+
+/* Phones, continued: rows that were too cramped at 360px. */
+.cp-checkout .portal-btn { white-space: nowrap; }
+.cp-checkout .product-info { align-items: flex-start; }
+.cp-checkout .order-list .product-details { flex: 1; }
+@media (max-width: 480px) {
+  /* Logged-in header: name under the title, Logout kept on the title's line. */
+  .cp-checkout .loginSection .cp-checkout-user h2 { flex-wrap: nowrap; align-items: flex-start; }
+  .cp-checkout .logged-in-title { min-width: 0; }
+  .cp-checkout .logged-in-title span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cp-checkout .logoutButton { padding: 6px 0 10px 10px; flex-shrink: 0; }
+  /* Cart rows: the title gets the full width beside the remove button; the price drops to its own line. */
+  .cp-checkout .cartItems.has-action .summary-item { flex-wrap: wrap; row-gap: 4px; }
+  .cp-checkout .cartItems.has-action .product-info { flex: 1 1 100%; padding-right: 48px; }
+  .cp-checkout .cartItems.has-action .summary-item .price { flex: 1 1 100%; margin-right: 0; padding-top: 0; text-align: right; }
+  .cp-checkout .cartItems.has-action .summary-item-remove { top: 8px; }
+  .cp-checkout .cartItems.has-action .summary-item:first-child .summary-item-remove { top: -4px; }
+}
+
+/* Success screen: countdown before the redirect to the Students Portal */
+.cp-checkout .portal-redirect { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 4px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.cp-checkout .portal-redirect .loader { margin-bottom: 2px; }
+.cp-checkout .portal-redirect .text-btn { padding: 0; }
+
+/* Compact header: logo on the left with "Secure checkout" on the same line. Overrides the portal's centred, stacked header. */
+.cp-checkout .header {
+  flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px;
+  max-width: 1080px; margin: 0 auto; padding: 0 4px 12px; text-align: left;
+}
+.cp-checkout .header a { display: flex; }
+.cp-checkout .header img { height: 26px; width: auto; max-width: none; margin: 0; }
+.cp-checkout .header small {
+  padding-left: 10px; border-left: 1.5px solid var(--line);
+  font-size: 14px; line-height: 20px; letter-spacing: .05em; white-space: nowrap;
+}
+.cp-checkout .demo-banner { margin-bottom: 12px; }
+@media (max-width: 768px) {
+  .cp-checkout .header { max-width: 640px; padding: 0 4px 10px; }
+  .cp-checkout .header img { height: 22px; max-width: none; }
+  .cp-checkout .header small { font-size: 12.5px; line-height: 18px; }
+  .cp-checkout .demo-banner { margin-bottom: 10px; }
+}
+
+/* Empty cart / item not found / page not found */
+.cp-checkout .empty-state { text-align: center; padding-top: 28px; padding-bottom: 32px; }
+.cp-checkout .empty-art { display: block; width: 340px; max-width: 100%; height: auto; margin: 0 auto 10px; }
+.cp-checkout .empty-state h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--brand-deep); margin-bottom: 8px; }
+.cp-checkout .empty-state .lead { max-width: 38ch; margin: 0 auto 20px; }
+.cp-checkout .empty-state .continue-btn { text-decoration: none; }
+@media (max-width: 480px) {
+  .cp-checkout .empty-state h1 { font-size: 20px; }
+  .cp-checkout .empty-art { width: 280px; }
+}
+
+/* Gift code: input and button share one line at every width, phones included. */
+.cp-checkout .apply-section { flex-direction: row; align-items: stretch; }
+.cp-checkout .apply-section input { flex: 1; min-width: 0; }
+.cp-checkout .apply-section .apply-btn { width: auto; max-width: 140px; flex-shrink: 0; white-space: nowrap; }
+/* The Apply / Remove button takes the input's corner radius so the pair reads as one control. */
+.cp-checkout .apply-section .apply-btn { border-radius: 14px; }
+
+/* Inline field error (billing email) */
+.cp-checkout input[aria-invalid='true'] { border-color: var(--bad-ink); }
+.cp-checkout .field-error { margin: -6px 0 12px; font-size: 12.5px; font-weight: 700; color: var(--bad-ink) !important; }
+
+/* Pincode, State and City row: dropdowns styled like the inputs beside them */
+.cp-checkout select {
+  appearance: none; -webkit-appearance: none; cursor: pointer; text-overflow: ellipsis; padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.cp-checkout select.is-empty { color: #a3b1c2; font-weight: 500; }
+.cp-checkout select option { color: var(--ink); font-weight: 500; }
+.cp-checkout select:disabled { background-color: var(--panel-soft); color: #a3b1c2; cursor: not-allowed; }
+.cp-checkout .field-hint { margin: -6px 0 12px; font-size: 12.5px; font-weight: 600; color: var(--muted) !important; }
+
+/* Gift code: Apply stays inactive until something is typed. */
+.cp-checkout .apply-btn:disabled, .cp-checkout .apply-btn:disabled:hover { background: var(--panel-soft); color: #a3b1c2; opacity: 1; }
+
+/* Pay Now: in the summary on desktop; pinned to the bottom of the screen on phones and portrait tablets. */
+.cp-checkout .pay-bar-total { display: none; }
+@media (max-width: 768px) {
+  .cp-checkout .pay-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 900;
+    display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 14px;
+    padding: 10px max(14px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    background: var(--panel); border-top: 1px solid var(--line); box-shadow: 0 -6px 20px rgba(0, 95, 115, 0.1);
+  }
+  .cp-checkout .pay-bar-total { display: flex; flex-direction: column; line-height: 1.25; }
+  .cp-checkout .pay-bar-total span { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .cp-checkout .pay-bar-total strong { font-size: 17px; font-weight: 800; color: var(--brand-deep); white-space: nowrap; }
+  .cp-checkout .pay-bar .pay-btn { margin: 0; padding: 14px 16px; }
+  .cp-checkout .pay-bar .pay-hint { grid-column: 1 / -1; margin: 6px 0 0; }
+  /* Room for the bar, so the last of the page is never hidden behind it. */
+  .cp-checkout:has(.pay-bar) { padding-bottom: calc(118px + env(safe-area-inset-bottom)); }
+  .cp-checkout:has(.pay-bar) ~ .toaster { bottom: calc(108px + env(safe-area-inset-bottom)); }
+}
+
+/* Help line: on its own, outside the white boxes. Desktop: under the form box. Phones: under every box. */
+.cp-checkout .form-column { flex: 1.2; min-width: 300px; display: flex; flex-direction: column; gap: 12px; }
+.cp-checkout .form-column > .form-section { flex: none; width: 100%; min-width: 0; }
+.cp-checkout .help-line { padding: 0 6px; font-size: 12.5px; font-weight: 500; line-height: 1.6; color: var(--muted); text-align: center; }
+@media (max-width: 1024px) {
+  .cp-checkout .form-column { flex: 1.1; }
+}
+@media (max-width: 768px) {
+  /* The column wrapper dissolves so the help line can be ordered after the Order Summary. */
+  .cp-checkout .form-column { display: contents; }
+  .cp-checkout .summary-section { order: 2; }
+  .cp-checkout .help-line { order: 3; }
+}
+
+/* Loading shimmer: grey blocks in the shape of the coming content, with a light band sweeping across. */
+.cp-checkout .sk {
+  display: block; flex-shrink: 0; max-width: 100%;
+  background: linear-gradient(90deg, #e3eaf2 0%, #f3f7fa 45%, #e3eaf2 90%); background-size: 200% 100%;
+  animation: sk-shimmer 1.2s ease-in-out infinite;
+}
+@keyframes sk-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .cp-checkout .sk { animation: none; } }
+.cp-checkout .sk-panel { display: flex; flex-direction: column; gap: 14px; }
+.cp-checkout .sk-row { display: flex; align-items: center; gap: 12px; }
+.cp-checkout .sk-row.is-spread { justify-content: space-between; }
+.cp-checkout .sk-stack { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.cp-checkout .sk-center { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 6px; }
+.cp-checkout .sk-divider { height: 1px; background: var(--line); margin: 4px 0; }
+.cp-checkout .cartSummary.sk-panel { gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.cp-checkout .sk-inline { display: inline-block; width: 86px; height: 18px; border-radius: 8px; vertical-align: middle; }
