@@ -620,3 +620,4 @@ body { margin: 0; background: var(--bg); }
   .cp-checkout .cart-bin { grid-column: 3; grid-row: 1; }
   .cp-checkout .cart-price { grid-column: 2 / -1; grid-row: 2; flex-direction: row-reverse; justify-content: flex-start; align-items: baseline; gap: 8px; padding-top: 8px; }
 }
+.cp-checkout .plan-chip { white-space: nowrap; }

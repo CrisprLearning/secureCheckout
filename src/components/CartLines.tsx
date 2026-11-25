@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import type { CartLine, ChargeRow, PaymentPlan, Summary } from '../api'
 import { optionLabel, rowId } from '../lib/cart'
 import { formatINR } from '../lib/format'
-import { chosenPlan, dueText, isInstalment, isSingle } from '../lib/plans'
+import { chosenPlan, dueNow, dueText, isInstalment, isSingle } from '../lib/plans'
 import { t } from '../strings'
 
 const DEFAULT_COURSE_PIC = 'https://img.icons8.com/color/96/book.png'
@@ -73,7 +73,9 @@ export function CartLines({
             {extra?.(line)}
           </div>
           <div className="cart-price">
-            <span className="price">{formatINR(line.unitPrice * line.number)}</span>
+            {/* On an instalment plan the row shows what is paid now, with the whole fee beneath. */}
+            <span className="price">{formatINR(dueNow(line) * line.number)}</span>
+            {isInstalment(line) && <span className="unit-price">{t.plan.overallFee(formatINR(line.unitPrice * line.number))}</span>}
             {/* The price of one, wherever the row can hold several. */}
             {!isSingle(line) && <span className="unit-price">{t.cart.each(formatINR(line.unitPrice))}</span>}
           </div>
@@ -118,19 +120,14 @@ function ChargeSplit({ row }: { row: ChargeRow }) {
 }
 
 /** Subtotal, discounts, taxes, extras and total, as computed by the server. */
-export function SummaryLines({ summary, totalLabel = (summary.payLater ?? 0) > 0 ? t.plan.payingNow : t.cart.total }: { summary: Summary; totalLabel?: string }) {
+export function SummaryLines({ summary, totalLabel = t.cart.total }: { summary: Summary; totalLabel?: string }) {
   return (
     <div className="cartSummary">
       <div className="summary-item">
         <span>{t.cart.subtotal}</span>
-        <span>{formatINR(summary.subTotal)}</span>
+        {/* The sum of the row amounts: on an instalment plan, the part paid later is left out. */}
+        <span>{formatINR(summary.subTotal - (summary.payLater ?? 0))}</span>
       </div>
-      {(summary.payLater ?? 0) > 0 && (
-        <div className="summary-item">
-          <span>{t.plan.payLater}</span>
-          <span>-{formatINR(summary.payLater!)}</span>
-        </div>
-      )}
       {summary.discount.amount > 0 && (
         <div className="summary-item">
           <span>{t.cart.discounts}</span>

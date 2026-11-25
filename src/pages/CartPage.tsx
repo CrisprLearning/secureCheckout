@@ -290,7 +290,6 @@ export function CartPage() {
   const billingDone = BILLING_FIELDS.every((f) => billing[f].trim() !== '')
   const unchosen = missingOption(lines)
   const canPay = !!student && !!summary && summary.totalPayable > 0 && billingDone && !unchosen && !busy
-  const localSubtotal = cart.reduce((sum, l) => sum + l.unitPrice * l.number, 0)
   const localDueNow = cart.reduce((sum, l) => sum + dueNow(l) * l.number, 0)
   const onInstalments = lines.some(isInstalment)
   const planLine = planView ? lines.find((l) => rowId(l) === planView.lineId && (l.plans ?? []).length > 0) : undefined
@@ -723,16 +722,10 @@ export function CartPage() {
           <div className="cartSummary">
             <div className="summary-item">
               <span>{t.cart.subtotal}</span>
-              <span>{formatINR(localSubtotal)}</span>
+              <span>{formatINR(localDueNow)}</span>
             </div>
-            {localSubtotal > localDueNow && (
-              <div className="summary-item">
-                <span>{t.plan.payLater}</span>
-                <span>-{formatINR(localSubtotal - localDueNow)}</span>
-              </div>
-            )}
             <div className="summary-item total">
-              <span>{localSubtotal > localDueNow ? t.plan.payingNow : t.cart.total}</span>
+              <span>{t.cart.total}</span>
               <span className="price">
                 {formatINR(localDueNow)}
                 <span className="superscript">†</span>

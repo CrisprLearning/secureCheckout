@@ -13,6 +13,7 @@ export const t = {
     payNow: 'Pay now',
     viewDetails: 'View details',
     chipLabel: 'Payment Plan:',
+    overallFee: (amount: string) => `overall fee ${amount}`,
     titleFor: 'Payment plan - for',
     payFull: 'Pay Full Amount',
     payFirst: 'Pay First Installment',
@@ -25,9 +26,7 @@ export const t = {
     dueOn: (date: string) => `Due ${date}`,
     relativeToStart: (days: number, before: boolean) =>
       days === 0 ? 'Due when the course starts' : `Due ${days} ${days === 1 ? 'day' : 'days'} ${before ? 'before' : 'after'} the course starts`,
-    payLater: 'To be paid later',
     noGiftCode: 'Gift cards and discount codes cannot be used with instalment payments',
-    payingNow: 'Total payable now',
   },
   portalButton: { Course: 'Access the Course', 'Test Series': 'Take the Exam' } as Record<string, string>,
   portalDefault: 'Go to the Students Portal',
