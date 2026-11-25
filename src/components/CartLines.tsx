@@ -43,7 +43,7 @@ export function CartLines({
   quantity?: (line: CartLine) => ReactNode
   /** Pickers for a line's choices. Without it the picks are shown as text ("Size: M"). */
   options?: (line: CartLine) => ReactNode
-  /** Drawn under the row's amount, right-aligned. */
+  /** Drawn in the price column, under the amount and its small print. */
   underPrice?: (line: CartLine) => ReactNode
 }) {
   return (
@@ -81,9 +81,9 @@ export function CartLines({
             {isInstalment(line) && <span className="unit-price">{t.plan.overallFee(formatINR(line.unitPrice * line.number))}</span>}
             {/* The price of one, wherever the row can hold several. */}
             {!isSingle(line) && <span className="unit-price">{t.cart.each(formatINR(line.unitPrice))}</span>}
+            {underPrice?.(line)}
           </div>
           {action?.(line)}
-          {underPrice?.(line) && <div className="cart-under-price">{underPrice(line)}</div>}
         </div>
       ))}
     </div>

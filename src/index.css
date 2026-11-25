@@ -502,11 +502,6 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .plan-schedule li.is-now span:last-child { color: var(--brand); font-weight: 700; }
 
 /* Payment plan chip (in place of the count on courses and test series) and its details popup */
-.cp-checkout .plan-chip {
-  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin-top: 6px; padding: 5px 10px;
-  border: 1.5px solid var(--line); border-radius: 999px; background: var(--brand-soft); color: var(--brand);
-  font-size: 12.5px; font-weight: 700;
-}
 .cp-checkout .modal.plan-modal { max-width: 480px; }
 .cp-checkout .plan-tabs { display: flex; gap: 6px; padding: 4px; border-radius: 14px; background: var(--brand-soft); }
 .cp-checkout .plan-tabs button {
@@ -618,7 +613,7 @@ body { margin: 0; background: var(--bg); }
   .cp-checkout .cart-thumb { width: 52px; height: 52px; border-radius: 12px; }
   .cp-checkout .cart-details { grid-column: 2; grid-row: 1; }
   .cp-checkout .cart-bin { grid-column: 3; grid-row: 1; }
-  .cp-checkout .cart-price { grid-column: 2 / -1; grid-row: 2; flex-direction: row-reverse; justify-content: flex-start; align-items: baseline; gap: 8px; padding-top: 8px; }
+  .cp-checkout .cart-price { grid-column: 2 / -1; grid-row: 2; padding-top: 8px; }
 }
 .cp-checkout .plan-chip { white-space: nowrap; }
 /* Apply stays greyed out until a code is typed (and on instalments, where codes do not apply). */
@@ -626,8 +621,7 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .coupon-box .apply-btn.is-disabled, .cp-checkout .coupon-box .apply-btn.is-disabled:hover { background: #e3eaf1; color: #a3b1c2; cursor: not-allowed; }
 .cp-checkout .modal p.plan-tax-note { margin: 0; text-align: right; font-size: 11.5px; font-weight: 500; color: var(--muted); }
 
-/* Under the row's amount, right-aligned: the payment plan chip. It spans the details and price columns so the title keeps its width. */
-.cp-checkout .cart-under-price { grid-column: 2 / 4; grid-row: 2; justify-self: end; margin-top: 6px; }
-@media (max-width: 480px) {
-  .cp-checkout .cart-under-price { grid-column: 2 / -1; grid-row: 3; }
-}
+/* The payment plan chip, compact, right under the amount's small print ("overall fee") */
+.cp-checkout .cart-price .plan-chip { margin-top: 4px; padding: 3px 8px; gap: 4px; font-size: 11.5px; font-weight: 500; border-radius: 8px; }
+.cp-checkout .cart-price .plan-chip b { font-weight: 700; }
+.cp-checkout .cart-price .plan-chip { align-self: flex-end; }

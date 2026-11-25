@@ -636,7 +636,10 @@ export function CartPage() {
                 onClick={() => setPlanView({ lineId: rowId(line), tab: chosenPlan(line)!.type })}
                 disabled={busy}
               >
-                {t.plan.chipLabel} <b>{chosenPlan(line)!.label}</b> <span aria-hidden="true">→</span>
+                {t.plan.chipLabel} <b>{chosenPlan(line)!.label}</b>
+                <svg width="9" height="6" viewBox="0 0 12 8" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M1 1.5l5 5 5-5" />
+                </svg>
               </button>
             ) : null
           }
