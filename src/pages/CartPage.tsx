@@ -382,7 +382,7 @@ export function CartPage() {
       try {
         const portalPage = await api.acknowledgePayment(order, result)
         clearCheckoutData()
-        // The server says where to go next; the success screen offers it as "Track on Candidate Portal".
+        // The server says where to go next; the success screen offers it as "Go to Candidate Portal".
         saveResult(attempt(order, { status: 'success', paymentId: result.razorpayPaymentId, portalUrl: portalPage }))
       } catch (err) {
         // Money has moved but the server did not confirm it. Never offer to pay again from here.
