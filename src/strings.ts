@@ -8,6 +8,17 @@ export const t = {
   loading: 'Loading',
 
   /** Label of the portal link for an item type; anything else falls back to `portalDefault`. */
+  plan: {
+    title: 'Payment plan',
+    payNow: 'Pay now',
+    later: 'Pay later',
+    dueOn: (date: string) => `Due ${date}`,
+    relativeToStart: (days: number, before: boolean) =>
+      days === 0 ? 'Due when the course starts' : `Due ${days} ${days === 1 ? 'day' : 'days'} ${before ? 'before' : 'after'} the course starts`,
+    payLater: 'To be paid later',
+    noGiftCode: 'Gift cards and discount codes cannot be used with instalment payments.',
+    payingNow: 'Total payable now',
+  },
   portalButton: { Course: 'Access the Course', 'Test Series': 'Take the Exam' } as Record<string, string>,
   portalDefault: 'Go to the Students Portal',
 
@@ -19,9 +30,16 @@ export const t = {
     invalidBody: 'The link may be incomplete, or the item is no longer on sale. Head back to our site to pick it again.',
     emptyLink: 'Take Me Home',
     remove: 'Remove',
+    removeTitle: 'Remove this item?',
+    removeBody: (title: string) => `${title} will be removed from your cart.`,
+    removeCancel: 'Keep it',
+    quantity: 'Quantity',
+    decrease: 'One less',
+    increase: 'One more',
     subtotal: 'Subtotal',
     discounts: 'Discounts',
     total: 'Total',
+    itemDelivery: 'The books and merchandise in your cart will be delivered to your address. They are usually dispatched in 2 to 4 working days.',
     bookDelivery: 'The books in your cart will be delivered to your address. They are usually dispatched in 2 to 4 working days.',
     preLoginNote:
       'Taxes and other charges if applicable, would be computed once user validates their mobile number. Please authenticate your mobile number to redeem Gift Codes',
@@ -86,6 +104,7 @@ export const t = {
   pay: {
     button: 'Pay Now',
     hintLogin: 'Please verify your mobile number to proceed.',
+    hintOption: (option: string, title: string) => `Please choose a ${option} for ${title} to proceed.`,
     hintBilling: 'Please add your billing address to proceed.',
     verifying: 'Confirming your payment',
     cancelledReason: 'the payment was cancelled before it was completed',

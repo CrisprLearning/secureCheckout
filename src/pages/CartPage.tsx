@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from 'react-router'
 import { api, ApiError } from '../api'
 import type { Billing, CartLine, Student, VerifiedCart } from '../api'
 import { Avatar } from '../components/Avatar'
-import { CartLines, SummaryLines } from '../components/CartLines'
+import { CartLines, PlanSchedule, SummaryLines } from '../components/CartLines'
+import { chosenPlan, dueNow, isInstalment } from '../lib/plans'
 import { EmptyState } from '../components/EmptyState'
 import { LoginPanel } from '../components/LoginPanel'
 import { LoaderScreen, TrashIcon } from '../components/Shell'
@@ -16,11 +17,17 @@ import {
   clearCheckoutData,
   forgetCouponCode,
   getCouponCode,
-  hasBooks,
+  MAX_QUANTITY,
+  isDelivered,
+  missingOption,
+  optionLabel,
+  setOption,
+  setPlan,
   rememberCouponCode,
   removeFromCart,
   retrieveCart,
   saveCart,
+  setQuantity,
   withChargeLabels,
 } from '../lib/cart'
 import { addressChars, digits, errorMessage, formatINR, isEmail, isPin, nameChars } from '../lib/format'
@@ -42,7 +49,17 @@ function billingFor(student: Student): Billing {
 
 /** The fields the server expects for a cart line, and nothing else. */
 const forServer = (lines: CartLine[]): CartLine[] =>
-  lines.map(({ itemId, title, type, unitPrice, number }) => ({ itemId, title, type, unitPrice, number }))
+  lines.map(({ itemId, title, type, unitPrice, number, options, plans, plan }) => ({
+    itemId,
+    title,
+    type,
+    unitPrice,
+    number,
+    // The buyer's picks (size: M) travel with the line; the server stores the cart as it is sent.
+    ...(options && Object.keys(options).length > 0 ? { options } : {}),
+    // The plan's type only: the server reads the amounts from its own catalogue.
+    ...(plans && plans.length > 0 ? { plan: plans.find((p) => p.type === plan)?.type ?? plans[0].type } : {}),
+  }))
 
 /**
  * Re-reads every line from the catalogue. The server refuses a cart whose stored prices are out of date,
@@ -60,7 +77,11 @@ async function refreshFromCatalogue(lines: CartLine[]): Promise<{ lines: CartLin
           unitPrice: item.sellingPrice,
           displayImage: item.photo,
           isBook: item.isBook,
+          isMerch: item.isMerch,
           chargeLabels: item.chargeLabels,
+          choices: item.options,
+          plans: item.plans,
+          commencement: item.commencement,
         }
       } catch (err) {
         if (err instanceof ApiError && err.code === 'item_unavailable') return null
@@ -84,6 +105,7 @@ export function CartPage() {
   const [invalidItem, setInvalidItem] = useState(false)
   const [cart, setCart] = useState<CartLine[]>([])
   const [verified, setVerified] = useState<VerifiedCart | null>(null)
+  const [removing, setRemoving] = useState<CartLine | null>(null)
   const [billing, setBilling] = useState<Billing>(NO_BILLING)
   const [code, setCode] = useState('')
   const [emailTouched, setEmailTouched] = useState(false)
@@ -213,8 +235,32 @@ export function CartPage() {
     setCode('')
   }
 
-  function remove(itemId: string) {
-    removeFromCart(itemId)
+  function confirmRemove() {
+    if (!removing) return
+    removeFromCart(removing.itemId)
+    setRemoving(null)
+    void revalidate()
+  }
+
+  function changeQuantity(itemId: string, number: number) {
+    setQuantity(itemId, number)
+    void revalidate()
+  }
+
+  // A pick does not change the price, so the cart is not re-priced.
+  function chooseOption(itemId: string, name: string, value: string) {
+    const next = setOption(itemId, name, value)
+    setCart(next)
+    setVerified((v) => v && { ...v, cart: next })
+  }
+
+  // An instalment plan changes what is charged now, and rules out gift codes.
+  function choosePlan(itemId: string, type: string) {
+    const next = setPlan(itemId, type)
+    if (next.some(isInstalment)) {
+      forgetCouponCode()
+      setCode('')
+    }
     void revalidate()
   }
 
@@ -237,8 +283,11 @@ export function CartPage() {
   // Logged in, but the server has not priced the cart yet: the totals shimmer instead of showing stale numbers.
   const pricing = !!student && !verified && !priceFailed
   const billingDone = BILLING_FIELDS.every((f) => billing[f].trim() !== '')
-  const canPay = !!student && !!summary && summary.totalPayable > 0 && billingDone && !busy
+  const unchosen = missingOption(lines)
+  const canPay = !!student && !!summary && summary.totalPayable > 0 && billingDone && !unchosen && !busy
   const localSubtotal = cart.reduce((sum, l) => sum + l.unitPrice * l.number, 0)
+  const localDueNow = cart.reduce((sum, l) => sum + dueNow(l) * l.number, 0)
+  const onInstalments = lines.some(isInstalment)
   // Checked against the pattern once the student leaves the field, and again on Pay.
   // State and City come from the bundled pincode table; a saved value the table does not know shows as unselected.
   const cities = places ? districtsOf(places, billing.state) : []
@@ -259,6 +308,7 @@ export function CartPage() {
 
   async function pay() {
     if (!student || !verified || paying.current) return // Pay tapped twice: the second tap is ignored
+    if (unchosen) return toast(t.pay.hintOption(optionLabel(unchosen.name).toLowerCase(), unchosen.line.title))
     if (pinMatch && pinMatch.state !== billing.state) return toast(t.billing.stateMismatch(pinMatch.state))
     if (!isPin(billing.pincode)) {
       setPinTouched(true)
@@ -538,15 +588,82 @@ export function CartPage() {
               className="summary-item-remove"
               title={t.cart.remove}
               aria-label={`${t.cart.remove}: ${line.title}`}
-              onClick={() => remove(line.itemId)}
+              onClick={() => setRemoving(line)}
               disabled={busy}
             >
               <TrashIcon />
             </button>
           )}
+          quantity={(line) =>
+            isDelivered(line) ? (
+              <span className="qty" role="group" aria-label={`${t.cart.quantity}: ${line.title}`}>
+                <button
+                  type="button"
+                  aria-label={t.cart.decrease}
+                  onClick={() => changeQuantity(line.itemId, line.number - 1)}
+                  disabled={busy || line.number <= 1}
+                >
+                  −
+                </button>
+                <span aria-live="polite">{line.number}</span>
+                <button
+                  type="button"
+                  aria-label={t.cart.increase}
+                  onClick={() => changeQuantity(line.itemId, line.number + 1)}
+                  disabled={busy || line.number >= MAX_QUANTITY}
+                >
+                  +
+                </button>
+              </span>
+            ) : null
+          }
+          options={(line) =>
+            (line.choices ?? []).map((choice) => (
+              <span className="option-picker" role="group" aria-label={`${optionLabel(choice.name)}: ${line.title}`} key={choice.name}>
+                <span className="option-name">{optionLabel(choice.name)}</span>
+                {choice.values.map((value) => (
+                  <button
+                    type="button"
+                    key={value}
+                    className={line.options?.[choice.name] === value ? 'is-picked' : ''}
+                    aria-pressed={line.options?.[choice.name] === value}
+                    onClick={() => chooseOption(line.itemId, choice.name, value)}
+                    disabled={busy}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </span>
+            )).concat(
+              (line.plans ?? []).length > 0
+                ? [
+                    <span className="plan-picker" key="payment-plan">
+                      <span className="option-picker" role="group" aria-label={`${t.plan.title}: ${line.title}`}>
+                        <span className="option-name">{t.plan.title}</span>
+                        {line.plans!.map((plan) => (
+                          <button
+                            type="button"
+                            key={plan.type}
+                            className={chosenPlan(line)?.type === plan.type ? 'is-picked' : ''}
+                            aria-pressed={chosenPlan(line)?.type === plan.type}
+                            onClick={() => choosePlan(line.itemId, plan.type)}
+                            disabled={busy}
+                          >
+                            {plan.label}
+                          </button>
+                        ))}
+                      </span>
+                      {isInstalment(line) && <PlanSchedule plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} />}
+                    </span>,
+                  ]
+                : [],
+            )
+          }
         />
 
-        {summary && (
+        {summary && onInstalments && <p className="plan-note">{t.plan.noGiftCode}</p>}
+
+        {summary && !onInstalments && (
           <div className="apply-section">
             {summary.discount.amount > 0 ? (
               <>
@@ -588,10 +705,16 @@ export function CartPage() {
               <span>{t.cart.subtotal}</span>
               <span>{formatINR(localSubtotal)}</span>
             </div>
+            {localSubtotal > localDueNow && (
+              <div className="summary-item">
+                <span>{t.plan.payLater}</span>
+                <span>-{formatINR(localSubtotal - localDueNow)}</span>
+              </div>
+            )}
             <div className="summary-item total">
-              <span>{t.cart.total}</span>
+              <span>{localSubtotal > localDueNow ? t.plan.payingNow : t.cart.total}</span>
               <span className="price">
-                {formatINR(localSubtotal)}
+                {formatINR(localDueNow)}
                 <span className="superscript">†</span>
               </span>
             </div>
@@ -604,9 +727,9 @@ export function CartPage() {
           </div>
         )}
 
-        {hasBooks(cart) && (
+        {cart.some(isDelivered) && (
           <p className="delivery-note" role="note">
-            {t.cart.bookDelivery}
+            {cart.some((l) => l.isMerch) ? t.cart.itemDelivery : t.cart.bookDelivery}
           </p>
         )}
 
@@ -614,18 +737,43 @@ export function CartPage() {
         <div className="pay-bar">
           <div className="pay-bar-total" aria-hidden="true">
             <span>{t.cart.total}</span>
-            <strong>{pricing ? <span className="sk sk-inline" /> : formatINR(summary ? summary.totalPayable : localSubtotal)}</strong>
+            <strong>{pricing ? <span className="sk sk-inline" /> : formatINR(summary ? summary.totalPayable : localDueNow)}</strong>
           </div>
           <button type="button" className="pay-btn" disabled={!canPay} onClick={pay} aria-describedby={canPay ? undefined : 'pay-hint'}>
             {t.pay.button}
           </button>
           {!canPay && !busy && !pricing && (
             <p id="pay-hint" className="pay-hint">
-              {!student ? t.pay.hintLogin : t.pay.hintBilling}
+              {!student ? t.pay.hintLogin : unchosen ? t.pay.hintOption(optionLabel(unchosen.name).toLowerCase(), unchosen.line.title) : t.pay.hintBilling}
             </p>
           )}
         </div>
       </section>
+
+      {removing && (
+        <div className="modal-backdrop" onClick={() => setRemoving(null)}>
+          <div
+            className="modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="remove-title"
+            aria-describedby="remove-body"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.key === 'Escape' && setRemoving(null)}
+          >
+            <h2 id="remove-title">{t.cart.removeTitle}</h2>
+            <p id="remove-body">{t.cart.removeBody(removing.title)}</p>
+            <div className="modal-actions">
+              <button type="button" className="apply-btn" onClick={() => setRemoving(null)} autoFocus>
+                {t.cart.removeCancel}
+              </button>
+              <button type="button" className="apply-btn is-danger" onClick={confirmRemove}>
+                {t.cart.remove}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {phase === 'verifying' && (
         <div className="modal-backdrop">

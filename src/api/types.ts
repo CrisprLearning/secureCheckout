@@ -1,8 +1,30 @@
 // Shapes exchanged with the Crispr candidate APIs (the same PHP endpoints the candidate portal's checkout uses).
 // Money is always in paise.
 
-/** 'Course' or 'Test Series' today; kept open so a new catalogue type does not break the cart. */
+/** 'Course', 'Test Series', 'Book' or 'Merchandise'; kept open so a new catalogue type does not break the cart. */
 export type ItemType = string
+
+/** One choice to make about an item. `name` is the catalogue's key ("size") and is what the order records. */
+export interface ItemOption {
+  name: string
+  values: string[]
+}
+
+export interface Installment {
+  label: string
+  amount: number
+  /** '' = paid at checkout; otherwise days before (-) or after (+) the reference date. */
+  dueDate: string
+  /** 'DOJ' (date of joining: the day of purchase) or 'DOC' (date of commencement). */
+  dueDateReference: string
+}
+
+/** One way to pay for an item: 'FULL', or 'INSTALLMENT' with part of the price paid later. */
+export interface PaymentPlan {
+  type: string
+  label: string
+  installments: Installment[]
+}
 
 /** A catalogue entry, as returned by public/courses.php. */
 export interface CatalogItem {
@@ -13,6 +35,14 @@ export interface CatalogItem {
   photo?: string
   /** A printed book: it is delivered to the billing address. */
   isBook: boolean
+  /** Merchandise such as a tee shirt: delivered too, and may need a choice such as a size. */
+  isMerch: boolean
+  /** Choices the buyer must make, from the catalogue's otherDetails (for example Size: S, M, L). */
+  options: ItemOption[]
+  /** Ways to pay, in the catalogue's order of priority. Empty when the item has no payment plan. */
+  plans: PaymentPlan[]
+  /** When the course starts ("5 April, 2025"), for instalments due relative to it. */
+  commencement?: string
   /** Display names of this item's taxes and extra charges, by charge code (for example SHIPPING: 'Delivery Charges'). */
   chargeLabels: Record<string, string>
 }
@@ -29,7 +59,16 @@ export interface CartLine {
   number: number
   displayImage?: string
   isBook?: boolean
+  isMerch?: boolean
   chargeLabels?: Record<string, string>
+  /** Kept in the browser to draw the pickers. */
+  choices?: ItemOption[]
+  /** What the buyer picked, by option name ({ size: 'M' }). Sent with the order and stored with it. */
+  options?: Record<string, string>
+  plans?: PaymentPlan[]
+  commencement?: string
+  /** The type of the plan the buyer picked. Sent with the order; the server works out what is charged. */
+  plan?: string
 }
 
 export interface Summary {
@@ -38,6 +77,9 @@ export interface Summary {
   taxes: { label: string; value: number }[]
   extras: { label: string; value: number }[]
   totalPayable: number
+  /** Part of the subtotal that is paid after checkout, on an instalment plan. */
+  payLater?: number
+  giftCodeAllowed?: boolean
 }
 
 export interface VerifiedCart {

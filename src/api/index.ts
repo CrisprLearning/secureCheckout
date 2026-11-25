@@ -137,6 +137,27 @@ export const api = {
       if (clean(c.code) && clean(c.label)) chargeLabels[clean(c.code)] = clean(c.label)
     }
     const type = clean(d.type)
+    const isMerch = type === 'Merchandise' || type === '4'
+    // Every list of plain values in otherDetails is a choice for the buyer: "size": ["S", "M", "L"].
+    const details = d.otherDetails && typeof d.otherDetails === 'object' ? (d.otherDetails as Record<string, unknown>) : {}
+    const options = Object.entries(details).flatMap(([name, list]) => {
+      const values = Array.isArray(list) ? [...new Set(list.map((v) => (typeof v === 'string' || typeof v === 'number' ? String(v).trim() : '')))].filter(Boolean) : []
+      return values.length > 0 ? [{ name, values }] : []
+    })
+    const plans = (Array.isArray(d.paymentPlan) ? (d.paymentPlan as Record<string, unknown>[]) : [])
+      .filter((p) => p && typeof p === 'object')
+      .sort((a, b) => Number(a.priority ?? 0) - Number(b.priority ?? 0))
+      .flatMap((p) => {
+        const list = (p.metadata as { installments?: unknown } | undefined)?.installments
+        const installments = (Array.isArray(list) ? (list as Record<string, unknown>[]) : []).map((i) => ({
+          label: clean(i.label),
+          amount: Number(i.amount) || 0,
+          dueDate: clean(i.dueDate),
+          dueDateReference: clean(i.dueDateReference),
+        }))
+        const planType = clean(p.type).toUpperCase()
+        return planType && installments.length > 0 ? [{ type: planType, label: clean(p.label) || planType, installments }] : []
+      })
     return {
       code,
       type,
@@ -146,6 +167,10 @@ export const api = {
       // Books are catalogue type 3. The API names types 1 and 2 only and sends an empty name for a book today,
       // so until it names them, an unnamed item with a shipping charge is taken to be a book.
       isBook: type === 'Book' || type === '3' || (type === '' && charges.some((c) => clean(c.code) === 'SHIPPING')),
+      isMerch,
+      options: isMerch ? options : [],
+      plans,
+      commencement: clean(details.commencement) || undefined,
       chargeLabels,
     }
   },
