@@ -71,11 +71,18 @@ export interface CartLine {
   plan?: string
 }
 
+/** A tax or extra charge of the order. `items` is how much each cart item adds to it, when the server sends the split. */
+export interface ChargeRow {
+  label: string
+  value: number
+  items?: { itemId: string; value: number; title?: string }[]
+}
+
 export interface Summary {
   subTotal: number
   discount: { code: string; amount: number }
-  taxes: { label: string; value: number }[]
-  extras: { label: string; value: number }[]
+  taxes: ChargeRow[]
+  extras: ChargeRow[]
   totalPayable: number
   /** Part of the subtotal that is paid after checkout, on an instalment plan. */
   payLater?: number

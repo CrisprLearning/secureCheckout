@@ -109,10 +109,17 @@ export function missingOption(lines: CartLine[]): { line: CartLine; name: string
   return null
 }
 
-/** The server names tax and extra rows by charge code (SHIPPING); this swaps in the catalogue's label (Delivery Charges). */
+/** The server names tax and extra rows by charge code (SHIPPING); this swaps in the catalogue's label (Delivery Charges) and names the items of each row's split. */
 export function withChargeLabels(summary: Summary, lines: CartLine[]): Summary {
   const labels: Record<string, string> = Object.assign({}, ...lines.map((line) => line.chargeLabels ?? {}))
-  const relabel = (rows: Summary['taxes'] = []) => rows.map((row) => ({ ...row, label: labels[row.label] ?? row.label }))
+  const titles = new Map(lines.map((line) => [line.itemId, line.title]))
+  const relabel = (rows: Summary['taxes'] = []) =>
+    rows.map((row) => ({
+      ...row,
+      label: labels[row.label] ?? row.label,
+      // The split names items by code; the titles come from the cart.
+      items: row.items?.map((item) => ({ ...item, title: titles.get(item.itemId) ?? item.itemId })),
+    }))
   return { ...summary, taxes: relabel(summary.taxes), extras: relabel(summary.extras) }
 }
 

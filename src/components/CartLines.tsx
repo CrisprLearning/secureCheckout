@@ -1,6 +1,7 @@
+import { useId, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { CartLine, PaymentPlan, Summary } from '../api'
-import { optionLabel } from '../lib/cart'
+import type { CartLine, ChargeRow, PaymentPlan, Summary } from '../api'
+import { isDelivered, optionLabel } from '../lib/cart'
 import { formatINR } from '../lib/format'
 import { chosenPlan, dueText, isInstalment, isSingle } from '../lib/plans'
 import { t } from '../strings'
@@ -45,7 +46,7 @@ export function CartLines({
   return (
     <div className={`cartItems ${action ? 'has-action' : ''}`}>
       {lines.map((line) => (
-        <div className="summary-item" key={line.itemId}>
+        <div className={`summary-item ${action && isDelivered(line) ? 'has-qty' : ''}`} key={line.itemId}>
           {action?.(line)}
           <div className="product-info">
             <img src={lineImage(line)} alt="" width="52" height="52" />
@@ -77,6 +78,36 @@ export function CartLines({
   )
 }
 
+/** The info icon beside a tax or extra charge. Hovering, focusing or clicking it shows how much each item adds. */
+function ChargeSplit({ row }: { row: ChargeRow }) {
+  const [open, setOpen] = useState(false)
+  const id = useId()
+  return (
+    <span className={`charge-info ${open ? 'is-open' : ''}`} onMouseLeave={() => setOpen(false)}>
+      <button
+        type="button"
+        aria-label={t.cart.chargeSplit(row.label)}
+        aria-expanded={open}
+        aria-describedby={id}
+        onClick={() => setOpen((o) => !o)}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
+      >
+        i
+      </button>
+      <span className="charge-split" role="tooltip" id={id}>
+        <strong>{t.cart.chargeSplitTitle(row.label)}</strong>
+        {row.items!.map((item) => (
+          <span className="charge-split-row" key={item.itemId}>
+            <span>{item.title ?? item.itemId}</span>
+            <span>{formatINR(item.value)}</span>
+          </span>
+        ))}
+      </span>
+    </span>
+  )
+}
+
 /** Subtotal, discounts, taxes, extras and total, as computed by the server. */
 export function SummaryLines({ summary, totalLabel = (summary.payLater ?? 0) > 0 ? t.plan.payingNow : t.cart.total }: { summary: Summary; totalLabel?: string }) {
   return (
@@ -99,7 +130,10 @@ export function SummaryLines({ summary, totalLabel = (summary.payLater ?? 0) > 0
       )}
       {[...summary.taxes, ...summary.extras].map((row) => (
         <div className="summary-item" key={row.label}>
-          <span>{row.label}</span>
+          <span className="charge-label">
+            {row.label}
+            {(row.items ?? []).length > 0 && <ChargeSplit row={row} />}
+          </span>
           <span>{formatINR(row.value)}</span>
         </div>
       ))}

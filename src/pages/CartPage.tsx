@@ -586,29 +586,26 @@ export function CartPage() {
 
         <CartLines
           lines={lines}
-          action={(line) => (
-            <button
-              type="button"
-              className="summary-item-remove"
-              title={t.cart.remove}
-              aria-label={`${t.cart.remove}: ${line.title}`}
-              onClick={() => setRemoving(line)}
-              disabled={busy}
-            >
-              <TrashIcon />
-            </button>
-          )}
-          quantity={(line) =>
+          action={(line) =>
             isDelivered(line) ? (
+              // Books and merchandise: − N + at the row's edge. At one copy the − becomes the bin, which removes the item.
               <span className="qty" role="group" aria-label={`${t.cart.quantity}: ${line.title}`}>
-                <button
-                  type="button"
-                  aria-label={t.cart.decrease}
-                  onClick={() => changeQuantity(line.itemId, line.number - 1)}
-                  disabled={busy || line.number <= 1}
-                >
-                  −
-                </button>
+                {line.number <= 1 ? (
+                  <button
+                    type="button"
+                    className="qty-remove"
+                    title={t.cart.remove}
+                    aria-label={`${t.cart.remove}: ${line.title}`}
+                    onClick={() => setRemoving(line)}
+                    disabled={busy}
+                  >
+                    <TrashIcon />
+                  </button>
+                ) : (
+                  <button type="button" aria-label={t.cart.decrease} onClick={() => changeQuantity(line.itemId, line.number - 1)} disabled={busy}>
+                    −
+                  </button>
+                )}
                 <span aria-live="polite">{line.number}</span>
                 <button
                   type="button"
@@ -619,7 +616,21 @@ export function CartPage() {
                   +
                 </button>
               </span>
-            ) : (line.plans ?? []).length > 0 ? (
+            ) : (
+              <button
+                type="button"
+                className="summary-item-remove"
+                title={t.cart.remove}
+                aria-label={`${t.cart.remove}: ${line.title}`}
+                onClick={() => setRemoving(line)}
+                disabled={busy}
+              >
+                <TrashIcon />
+              </button>
+            )
+          }
+          quantity={(line) =>
+            isDelivered(line) ? null : (line.plans ?? []).length > 0 ? (
               // Courses and test series show their payment plan where the count would be; a click opens its details.
               <button
                 type="button"
@@ -637,31 +648,45 @@ export function CartPage() {
             )
           }
           options={(line) =>
-            (line.choices ?? []).map((choice) => (
-              <span className="option-picker" role="group" aria-label={`${optionLabel(choice.name)}: ${line.title}`} key={choice.name}>
-                <span className="option-name">{optionLabel(choice.name)}</span>
-                {choice.values.map((value) => (
-                  <button
-                    type="button"
-                    key={value}
-                    className={line.options?.[choice.name] === value ? 'is-picked' : ''}
-                    aria-pressed={line.options?.[choice.name] === value}
-                    onClick={() => chooseOption(line.itemId, choice.name, value)}
+            (line.choices ?? []).map((choice) => {
+              const picked = line.options?.[choice.name] ?? ''
+              return (
+                <label className="option-select" key={choice.name}>
+                  <span className="option-name">{optionLabel(choice.name)}</span>
+                  <select
+                    className={picked === '' ? 'is-empty' : ''}
+                    aria-label={`${optionLabel(choice.name)}: ${line.title}`}
+                    value={picked}
+                    onChange={(e) => chooseOption(line.itemId, choice.name, e.target.value)}
                     disabled={busy}
                   >
-                    {value}
-                  </button>
-                ))}
-              </span>
-            ))
+                    <option value="" disabled>
+                      {t.cart.selectOption}
+                    </option>
+                    {choice.values.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )
+            })
           }
         />
 
-        {summary && onInstalments && <p className="plan-note">{t.plan.noGiftCode}</p>}
-
-        {summary && !onInstalments && (
+        {summary && (
           <div className="apply-section">
-            {summary.discount.amount > 0 ? (
+            {onInstalments ? (
+              // Gift codes do not apply to instalments: the field is off, and Apply only explains why.
+              // The button is aria-disabled rather than disabled so that a click still reaches it.
+              <>
+                <input type="text" placeholder={t.cart.codePlaceholder} aria-label={t.cart.codePlaceholder} value="" disabled readOnly />
+                <button type="button" className="apply-btn is-disabled" aria-disabled="true" onClick={() => toast(t.plan.noGiftCode)}>
+                  {t.cart.apply}
+                </button>
+              </>
+            ) : summary.discount.amount > 0 ? (
               <>
                 <input type="text" aria-label={t.cart.codePlaceholder} value={summary.discount.code} disabled readOnly />
                 <button type="button" className="apply-btn" onClick={removeCode} disabled={busy}>
@@ -756,8 +781,9 @@ export function CartPage() {
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.key === 'Escape' && setPlanView(null)}
           >
-            <h2 id="plan-title">{t.plan.title}</h2>
-            <p>{planLine.title}</p>
+            <h2 id="plan-title" className="plan-modal-title">
+              {t.plan.titleFor} <b>{planLine.title}</b>
+            </h2>
             <div className="plan-tabs" role="tablist">
               {planLine.plans!.map((plan, i) => (
                 <button
@@ -803,22 +829,22 @@ export function CartPage() {
                   </tr>
                 </tfoot>
               </table>
-              <p className="plan-table-note">{planTab.type === 'FULL' ? t.plan.fullNote : t.plan.instalmentNote}</p>
             </div>
             <div className="modal-actions">
               <button type="button" className="apply-btn" onClick={() => setPlanView(null)}>
                 {t.plan.close}
               </button>
+              {/* Picks the plan on show and closes: the label says what that plan charges at checkout. */}
               <button
                 type="button"
-                className="apply-btn is-primary"
-                disabled={chosenPlan(planLine)?.type === planTab.type}
+                className="apply-btn is-primary plan-pay"
                 onClick={() => {
-                  choosePlan(planLine.itemId, planTab.type)
+                  if (chosenPlan(planLine)?.type !== planTab.type) choosePlan(planLine.itemId, planTab.type)
                   setPlanView(null)
                 }}
               >
-                {chosenPlan(planLine)?.type === planTab.type ? t.plan.selected : t.plan.choose(planTab.label)}
+                {planTab.type === 'FULL' ? t.plan.payFull : t.plan.payFirst}
+                <span>{formatINR(dueNow({ ...planLine, plan: planTab.type }) * planLine.number)}</span>
               </button>
             </div>
           </div>

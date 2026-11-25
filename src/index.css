@@ -443,7 +443,9 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .field-hint { margin: -6px 0 12px; font-size: 12.5px; font-weight: 600; color: var(--muted) !important; }
 
 /* Gift code: Apply stays inactive until something is typed. */
-.cp-checkout .apply-btn:disabled, .cp-checkout .apply-btn:disabled:hover { background: var(--panel-soft); color: #a3b1c2; opacity: 1; }
+.cp-checkout .apply-btn:disabled, .cp-checkout .apply-btn:disabled:hover,
+.cp-checkout .apply-btn.is-disabled, .cp-checkout .apply-btn.is-disabled:hover { background: var(--panel-soft); color: #a3b1c2; opacity: 1; }
+.cp-checkout .apply-btn.is-disabled { cursor: not-allowed; }
 
 /* Pay Now: in the summary on desktop; pinned to the bottom of the screen on phones and portrait tablets. */
 .cp-checkout .pay-bar-total { display: none; }
@@ -506,13 +508,25 @@ body { margin: 0; background: var(--bg); }
 }
 .cp-checkout .support-note a { color: inherit; font-weight: 700; white-space: nowrap; text-decoration: none; }
 
-/* Books: − and + to change the number of copies */
-.cp-checkout .qty { display: inline-flex; align-items: center; align-self: flex-start; margin-top: 6px; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; }
-.cp-checkout .qty button { width: 30px; height: 28px; border: none; background: var(--brand-soft); color: var(--brand); font-size: 16px; font-weight: 800; line-height: 1; }
+/* Books and merchandise: − N + at the row's edge, where other rows have the bin; at one copy the − is the bin */
+.cp-checkout .qty { position: absolute; right: 0; top: 12px; display: inline-flex; align-items: center; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+.cp-checkout .cartItems .summary-item:first-child .qty { top: 0; }
+.cp-checkout .qty button { width: 30px; height: 28px; padding: 0; border: none; background: var(--brand-soft); color: var(--brand); font-size: 16px; font-weight: 800; line-height: 1; display: grid; place-items: center; }
 .cp-checkout .qty button:disabled { opacity: .4; }
+.cp-checkout .qty button.qty-remove { background: var(--panel-soft); color: var(--muted); }
+.cp-checkout .qty button.qty-remove:hover { background: #ffd6df; color: var(--bad-ink); }
 .cp-checkout .qty > span { min-width: 30px; padding: 0 6px; text-align: center; font-size: 13px; font-weight: 700; color: var(--brand-deep); }
+/* The price sits under the stepper, so the title keeps the width beside it. */
+.cp-checkout .cartItems .summary-item.has-qty .price { margin-right: 0; min-width: 100px; padding-top: 38px; text-align: right; }
 @media (max-width: 768px) {
   .cp-checkout .qty button { width: 40px; height: 36px; }
+  .cp-checkout .cartItems .summary-item.has-qty .price { margin-right: 0; padding-top: 46px; min-width: 126px; }
+}
+@media (max-width: 480px) {
+  .cp-checkout .cartItems.has-action .summary-item.has-qty .product-info { padding-right: 132px; }
+  .cp-checkout .cartItems.has-action .summary-item.has-qty .price { padding-top: 0; }
+  .cp-checkout .cartItems .summary-item .qty { top: 8px; }
+  .cp-checkout .cartItems .summary-item:first-child .qty { top: -4px; }
 }
 
 /* Confirmation before an item is removed from the cart */
@@ -521,17 +535,12 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .modal .apply-btn.is-danger:hover { background: #8f0e33; color: #fff; }
 .cp-checkout .modal .modal-actions .apply-btn { flex: 1 1 0; width: auto; min-width: 0; }
 
-/* Merchandise: pick a size (or another option) under the item's title */
-.cp-checkout .option-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
-.cp-checkout .option-name { font-size: 12.5px; font-weight: 700; color: var(--muted); margin-right: 2px; }
-.cp-checkout .option-picker button {
-  min-width: 36px; height: 30px; padding: 0 9px; border-radius: 10px; border: 1.5px solid var(--line);
-  background: var(--panel); color: var(--brand-deep); font-size: 12.5px; font-weight: 700;
-}
-.cp-checkout .option-picker button:hover { border-color: var(--brand); }
-.cp-checkout .option-picker button.is-picked { background: var(--brand); border-color: var(--brand); color: #fff; }
+/* Merchandise: a dropdown for each option (size) under the item's title */
+.cp-checkout .option-select { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.cp-checkout .option-name { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.cp-checkout .option-select select { width: auto; min-width: 104px; margin: 0; padding: 7px 34px 7px 12px; border-radius: 10px; font-size: 13px; font-weight: 700; }
 @media (max-width: 768px) {
-  .cp-checkout .option-picker button { min-width: 42px; height: 38px; }
+  .cp-checkout .option-select select { font-size: 16px; padding-top: 9px; padding-bottom: 9px; }
 }
 
 /* Payment plan: pick Full Payment or Installments under the item, with the schedule of what is paid when */
@@ -540,7 +549,6 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .plan-schedule li { display: grid; grid-template-columns: 1fr auto; column-gap: 10px; font-size: 12.5px; font-weight: 600; color: var(--brand-deep); }
 .cp-checkout .plan-schedule li span:last-child { grid-column: 1 / -1; font-size: 11.5px; font-weight: 600; color: var(--muted); }
 .cp-checkout .plan-schedule li.is-now span:last-child { color: var(--brand); font-weight: 700; }
-.cp-checkout .plan-note { margin: 12px 0 4px; font-size: 12.5px; font-weight: 500; color: var(--muted); }
 
 /* Payment plan chip (in place of the count on courses and test series) and its details popup */
 .cp-checkout .plan-chip {
@@ -565,6 +573,29 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .plan-table td:nth-child(2) { font-weight: 500; color: var(--muted); }
 .cp-checkout .plan-table th:last-child, .cp-checkout .plan-table td:last-child { text-align: right; white-space: nowrap; }
 .cp-checkout .plan-table tfoot th, .cp-checkout .plan-table tfoot td { border-bottom: none; font-weight: 800; color: var(--brand-deep); }
-.cp-checkout .modal p.plan-table-note { font-size: 12.5px; margin: 8px 0 0; }
+.cp-checkout .plan-modal-title { font-size: 18px; font-weight: 600; line-height: 1.35; }
+.cp-checkout .plan-modal-title b { font-weight: 800; }
+.cp-checkout .modal .modal-actions .plan-pay { flex: 1.6 1 0; line-height: 1.25; }
+.cp-checkout .plan-pay span { display: block; font-size: 12.5px; font-weight: 600; opacity: .85; }
 .cp-checkout .modal .apply-btn.is-primary { background: var(--brand); color: #fff; }
 .cp-checkout .modal .apply-btn.is-primary:disabled { opacity: .5; }
+
+/* Info icon beside a tax or extra charge, with the split by item on hover, focus or click */
+.cp-checkout .charge-label { display: inline-flex; align-items: center; gap: 6px; }
+.cp-checkout .charge-info { position: relative; display: inline-flex; }
+.cp-checkout .charge-info button {
+  width: 18px; height: 18px; padding: 0; border-radius: 50%; border: 1.5px solid var(--muted); background: none;
+  color: var(--muted); font: italic 700 11px/1 Georgia, 'Times New Roman', serif;
+}
+.cp-checkout .charge-info button:hover, .cp-checkout .charge-info.is-open button { border-color: var(--brand); color: var(--brand); }
+.cp-checkout .charge-split {
+  display: none; position: absolute; left: -8px; bottom: calc(100% + 8px); z-index: 20; width: max-content; max-width: min(300px, 76vw);
+  padding: 10px 12px; border-radius: 12px; background: var(--ink); color: #fff; box-shadow: var(--shadow);
+  font-size: 12px; font-weight: 500; line-height: 1.45; text-align: left; white-space: normal;
+}
+/* Bridges the gap between the icon and the box so the pointer can move onto it. */
+.cp-checkout .charge-split::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 10px; }
+.cp-checkout .charge-info:hover .charge-split, .cp-checkout .charge-info:focus-within .charge-split, .cp-checkout .charge-info.is-open .charge-split { display: block; }
+.cp-checkout .charge-split strong { display: block; margin-bottom: 4px; font-weight: 700; }
+.cp-checkout .charge-split-row { display: flex; justify-content: space-between; gap: 16px; }
+.cp-checkout .charge-split-row span:last-child { white-space: nowrap; font-weight: 700; }
