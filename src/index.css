@@ -500,4 +500,4 @@ body { margin: 0; background: var(--bg); }
   background: #fff6d9; border: 1px solid #f3d27a; color: var(--warn-ink);
   font-size: 13px; font-weight: 500; line-height: 1.55;
 }
-.cp-checkout .support-note a { color: inherit; font-weight: 700; white-space: nowrap; }
+.cp-checkout .support-note a { color: inherit; font-weight: 700; white-space: nowrap; text-decoration: none; }
