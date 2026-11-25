@@ -152,6 +152,7 @@ export function ResultPage() {
 
       <CartLines
         lines={record.items}
+        planBehindIcon
         extra={(line: CartLine) => (
           <a className="apply-btn portal-btn" href={portalUrlFor(line.type)}>
             {t.portalButton[line.type] ?? t.portalDefault}
