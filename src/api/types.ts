@@ -95,6 +95,8 @@ export interface Summary {
 export interface VerifiedCart {
   cart: CartLine[]
   summary: Summary
+  /** Courses and test series in the cart that the candidate has already paid for. They must be removed before paying. */
+  alreadyPurchased?: { itemId: string; title: string }[]
 }
 
 export interface Billing {

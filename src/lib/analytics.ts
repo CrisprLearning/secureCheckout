@@ -8,7 +8,6 @@ type EventName =
   | 'begin_checkout'
   | 'purchase'
   | 'payment_failed'
-  | 'portal_handoff'
 
 interface EventParams {
   item_id?: string

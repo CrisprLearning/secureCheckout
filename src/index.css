@@ -352,10 +352,6 @@ body { margin: 0; background: var(--bg); }
   /* Cart rows: the title gets the full width beside the remove button; the price drops to its own line. */
 }
 
-/* Success screen: countdown before the redirect to the Students Portal */
-.cp-checkout .portal-redirect { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 4px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
-.cp-checkout .portal-redirect .loader { margin-bottom: 2px; }
-.cp-checkout .portal-redirect .text-btn { padding: 0; }
 
 /* Compact header: logo on the left with "Secure checkout" on the same line. Overrides the portal's centred, stacked header. */
 .cp-checkout .header {
@@ -679,3 +675,4 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .plan-line { display: inline-flex; align-items: center; gap: 6px; }
 .cp-checkout .charge-split.plan-split { width: 250px; max-width: 76vw; padding: 6px; background: #fff; border: 1px solid var(--line); color: var(--ink); }
 .cp-checkout .plan-split .plan-schedule { margin: 0; }
+.cp-checkout .owned-list { margin: 0 0 6px; padding-left: 18px; font-size: 14px; font-weight: 600; color: var(--ink); }

@@ -29,7 +29,7 @@ export const t = {
       days === 0 ? 'Due when the course starts' : `Due ${days} ${days === 1 ? 'day' : 'days'} ${before ? 'before' : 'after'} the course starts`,
     noGiftCode: 'Gift cards and discount codes cannot be used with instalment payments',
   },
-  portalButton: { Course: 'Access the Course', 'Test Series': 'Take the Exam' } as Record<string, string>,
+  portalButton: { 'Test Series': 'Take the Exam' } as Record<string, string>,
   portalDefault: 'Go to the Students Portal',
 
   cart: {
@@ -40,6 +40,11 @@ export const t = {
     invalidBody: 'The link may be incomplete, or the item is no longer on sale. Head back to our site to pick it again.',
     emptyLink: 'Take Me Home',
     remove: 'Remove',
+    ownedTitle: 'Already purchased',
+    ownedOne: (title: string) => `You have already purchased ${title}. It will be removed from your cart.`,
+    ownedMany: 'You have already purchased these items. They will be removed from your cart.',
+    ownedRemoveOne: 'Remove from cart',
+    ownedRemoveMany: 'Remove them from cart',
     selectOption: (option: string) => `Select ${option.toLowerCase()}`,
     each: (price: string) => `${price} each`,
     couponTitle: 'Have a coupon code?',
@@ -146,10 +151,6 @@ export const t = {
     orderNumber: 'Order number',
     paymentRef: 'Payment reference',
     date: 'Date',
-    redirectIn: (s: number) => `You will be taken to the Students Portal in ${s} second${s === 1 ? '' : 's'}`,
-    redirecting: 'Taking you to the Students Portal',
-    clickHere: 'Click here',
-    clickHereRest: ' if you are not redirected to the Students Portal',
     receipt: 'Print or save receipt',
   },
 

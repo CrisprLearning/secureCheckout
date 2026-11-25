@@ -17,8 +17,6 @@ export interface PaymentRecord {
   /** Why it failed, or what the server said when it could not confirm. */
   reason?: string
   at: string
-  /** Set once the success screen has sent the student to the portal, so a reload does not do it again. */
-  redirected?: boolean
 }
 
 const KEY = 'crispr-payment-result'

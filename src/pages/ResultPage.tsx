@@ -1,57 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import type { CartLine } from '../api'
 import { CartLines, SummaryLines } from '../components/CartLines'
 import { Panel } from '../components/Shell'
 import { SUPPORT_EMAIL, SUPPORT_PHONE } from '../config'
-import { track, trackPurchaseOnce } from '../lib/analytics'
+import { trackPurchaseOnce } from '../lib/analytics'
 import { forgetCouponCode, rememberCouponCode, saveCart } from '../lib/cart'
 import { formatDate } from '../lib/format'
-import { loadResult, portalUrlFor, saveResult } from '../lib/result'
-import type { PaymentRecord } from '../lib/result'
+import { loadResult, portalUrlFor } from '../lib/result'
 import { t } from '../strings'
-
-const REDIRECT_SECONDS = 5
-
-// Under "Your payment is successful!": a spinner with a countdown, then the move to the Students Portal,
-// then a manual link in case the browser did not go.
-function PortalRedirect({ record }: { record: PaymentRecord }) {
-  const [left, setLeft] = useState(REDIRECT_SECONDS)
-  const started = useRef(false)
-  const target = portalUrlFor(record.items[0]?.type)
-
-  useEffect(() => {
-    if (left <= 0) return
-    const timer = setTimeout(() => setLeft((s) => s - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [left])
-
-  useEffect(() => {
-    if (left > 0 || started.current) return
-    started.current = true
-    saveResult({ ...record, redirected: true })
-    track('portal_handoff')
-    window.location.assign(target)
-  }, [left, record, target])
-
-  return (
-    <div className="portal-redirect no-print" role="status">
-      <div className="loader is-dark" aria-hidden="true" />
-      <p>{left > 0 ? t.result.redirectIn(left) : t.result.redirecting}</p>
-      {left <= 0 && (
-        <p>
-          <a href={target}>{t.result.clickHere}</a>
-          {t.result.clickHereRest}
-        </p>
-      )}
-    </div>
-  )
-}
 
 // What happened to the payment: success, failed (with Retry Payment), or paid-but-not-confirmed.
 export function ResultPage() {
   const navigate = useNavigate()
-  // Read once: the countdown marks the record as redirected, which must not hide the countdown mid-way.
   const [record] = useState(loadResult)
 
   useEffect(() => {
@@ -147,17 +108,19 @@ export function ResultPage() {
         </div>
         <h2>{t.result.successTitle}</h2>
         <p className="lead">{t.result.successBody}</p>
-        {!record.redirected && <PortalRedirect record={record} />}
       </div>
 
       <CartLines
         lines={record.items}
         planBehindIcon
-        extra={(line: CartLine) => (
-          <a className="apply-btn portal-btn" href={portalUrlFor(line.type)}>
-            {t.portalButton[line.type] ?? t.portalDefault}
-          </a>
-        )}
+        // Courses have no button of their own; the page moves on to the Students Portal by itself.
+        extra={(line: CartLine) =>
+          line.type === 'Course' ? null : (
+            <a className="apply-btn portal-btn" href={portalUrlFor(line.type)}>
+              {t.portalButton[line.type] ?? t.portalDefault}
+            </a>
+          )
+        }
       />
       <SummaryLines summary={record.summary} totalLabel={t.result.amountPaid} />
       {facts}

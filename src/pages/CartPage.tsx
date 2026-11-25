@@ -110,6 +110,8 @@ export function CartPage() {
   const [cart, setCart] = useState<CartLine[]>([])
   const [verified, setVerified] = useState<VerifiedCart | null>(null)
   const [removing, setRemoving] = useState<CartLine | null>(null)
+  // Courses and test series in the cart that this candidate has already bought.
+  const [owned, setOwned] = useState<CartLine[]>([])
   // The payment plan popup: which item it is for, and which plan's tab is showing.
   const [planView, setPlanView] = useState<{ lineId: string; tab: string } | null>(null)
   const [billing, setBilling] = useState<Billing>(NO_BILLING)
@@ -187,7 +189,10 @@ export function CartPage() {
           res = await api.validateCart(forServer(lines), wanted)
         }
         // The server's totals with our own lines, which also carry the pictures.
-        setVerified({ cart: lines, summary: withChargeLabels(res.summary, lines) })
+        const ownedIds = new Set((res.alreadyPurchased ?? []).map((item) => item.itemId))
+        setVerified({ cart: lines, summary: withChargeLabels(res.summary, lines), alreadyPurchased: res.alreadyPurchased })
+        // Opens the popup that takes already-bought courses and test series out of the cart.
+        setOwned(lines.filter((l) => ownedIds.has(l.itemId)))
         if (wanted && res.summary.discount.amount === 0) {
           forgetCouponCode()
           if (opts.applying) toast(t.cart.codeInvalid)
@@ -239,8 +244,15 @@ export function CartPage() {
     api.logout()
     setStudent(null)
     setVerified(null)
+    setOwned([])
     forgetCouponCode()
     setCode('')
+  }
+
+  function removeOwned() {
+    for (const line of owned) removeFromCart(rowId(line))
+    setOwned([])
+    void revalidate()
   }
 
   function confirmRemove() {
@@ -292,7 +304,7 @@ export function CartPage() {
   const pricing = !!student && !verified && !priceFailed
   const billingDone = BILLING_FIELDS.every((f) => billing[f].trim() !== '')
   const unchosen = missingOption(lines)
-  const canPay = !!student && !!summary && summary.totalPayable > 0 && billingDone && !unchosen && !busy
+  const canPay = !!student && !!summary && summary.totalPayable > 0 && billingDone && !unchosen && owned.length === 0 && !busy
   const localDueNow = cart.reduce((sum, l) => sum + dueNow(l) * l.number, 0)
   const onInstalments = lines.some(isInstalment)
   const planLine = planView ? lines.find((l) => rowId(l) === planView.lineId && (l.plans ?? []).length > 0) : undefined
@@ -840,6 +852,27 @@ export function CartPage() {
               </button>
             </div>
             <p className="plan-tax-note">{t.plan.taxNote}</p>
+          </div>
+        </div>
+      )}
+
+      {owned.length > 0 && (
+        <div className="modal-backdrop">
+          <div className="modal" role="alertdialog" aria-modal="true" aria-labelledby="owned-title" aria-describedby="owned-body">
+            <h2 id="owned-title">{t.cart.ownedTitle}</h2>
+            <p id="owned-body">{owned.length === 1 ? t.cart.ownedOne(owned[0].title) : t.cart.ownedMany}</p>
+            {owned.length > 1 && (
+              <ul className="owned-list">
+                {owned.map((line) => (
+                  <li key={rowId(line)}>{line.title}</li>
+                ))}
+              </ul>
+            )}
+            <div className="modal-actions">
+              <button type="button" className="apply-btn is-primary" onClick={removeOwned} autoFocus>
+                {owned.length === 1 ? t.cart.ownedRemoveOne : t.cart.ownedRemoveMany}
+              </button>
+            </div>
           </div>
         </div>
       )}
