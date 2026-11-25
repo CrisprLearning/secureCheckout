@@ -4,9 +4,12 @@
 import type { CartLine, Installment, PaymentPlan } from '../api/types'
 import { t } from '../strings'
 
-/** The plan a line is on: the buyer's pick, or Full Payment until they pick one. */
+/**
+ * The plan a line is on: the buyer's pick, or else the catalogue's first plan. Plans are kept in priority
+ * order, so the first is the one with priority 1 (the lowest number).
+ */
 export function chosenPlan(line: CartLine): PaymentPlan | undefined {
-  return line.plans?.find((p) => p.type === line.plan) ?? line.plans?.find((p) => p.type === 'FULL') ?? line.plans?.[0]
+  return line.plans?.find((p) => p.type === line.plan) ?? line.plans?.[0]
 }
 
 /** Courses and test series are bought one at a time, so their rows show no count. */

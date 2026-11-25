@@ -62,7 +62,7 @@ const forServer = (lines: CartLine[]): CartLine[] =>
     // The buyer's picks (size: M) travel with the line; the server stores the cart as it is sent.
     ...(options && Object.keys(options).length > 0 ? { options } : {}),
     // The plan's type only: the server reads the amounts from its own catalogue.
-    ...(plans && plans.length > 0 ? { plan: (plans.find((p) => p.type === plan) ?? plans.find((p) => p.type === 'FULL') ?? plans[0]).type } : {}),
+    ...(plans && plans.length > 0 ? { plan: (plans.find((p) => p.type === plan) ?? plans[0]).type } : {}),
   }))
 
 /**

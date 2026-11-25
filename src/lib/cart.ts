@@ -95,6 +95,8 @@ export function addToCart(item: CatalogItem, selection: string | null = null): C
       chargeLabels: item.chargeLabels,
       choices: item.options,
       plans: item.plans,
+      // The plan with priority 1 is selected to begin with; the catalogue lists plans in priority order.
+      ...(item.plans.length > 0 ? { plan: item.plans[0].type } : {}),
       commencement: item.commencement,
       ...(picks ? { options: picks } : {}),
     })
