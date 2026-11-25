@@ -101,7 +101,10 @@ export const t = {
     retry: 'Retry Payment',
     unconfirmedTitle: 'We could not confirm your payment',
     unconfirmedBody:
-      'Your payment went through at the bank, but we could not confirm it on our side. Please do not pay again. Contact us with the payment reference below and we will sort it out.',
+      'Your payment went through at the bank, but we could not confirm it on our side. Please do not pay again.',
+    supportNoteBefore: 'This does not usually happen. Please contact our technical support team on ',
+    supportNoteOr: ' or ',
+    supportNoteAfter: ' with the payment reference below, and we will get it sorted at the earliest.',
     amountDue: 'Amount due',
     amountPaid: 'Amount paid',
     orderNumber: 'Order number',

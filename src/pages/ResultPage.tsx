@@ -124,8 +124,12 @@ export function ResultPage() {
           <h2>{t.result.unconfirmedTitle}</h2>
           <p className="lead">{t.result.unconfirmedBody}</p>
           {record.reason && <p className="lead">{record.reason}</p>}
-          <p className="lead">
-            <a href={`tel:+91${SUPPORT_PHONE}`}>{SUPPORT_PHONE}</a> · <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+          <p className="support-note" role="note">
+            {t.result.supportNoteBefore}
+            <a href={`tel:+91${SUPPORT_PHONE}`}>{SUPPORT_PHONE}</a>
+            {t.result.supportNoteOr}
+            <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+            {t.result.supportNoteAfter}
           </p>
         </div>
         <CartLines lines={record.items} />
