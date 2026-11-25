@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { api, ApiError } from '../api'
 import type { Billing, CartLine, Student, VerifiedCart } from '../api'
+import { Avatar } from '../components/Avatar'
 import { CartLines, SummaryLines } from '../components/CartLines'
 import { EmptyState } from '../components/EmptyState'
 import { LoginPanel } from '../components/LoginPanel'
@@ -366,9 +367,7 @@ export function CartPage() {
         {student ? (
           <div className="loginSection">
             <div className="cp-checkout-user">
-              <span className="cp-avatar-wrap" aria-hidden="true">
-                {(billing.fullname.trim()[0] ?? '').toUpperCase()}
-              </span>
+              <Avatar key={student.mobile} initial={(billing.fullname.trim()[0] ?? '').toUpperCase()} />
               <h2>
                 <span className="logged-in-title">
                   {t.login.loggedIn} {student.name && <span>{t.login.loggedInAs(student.name)}</span>}

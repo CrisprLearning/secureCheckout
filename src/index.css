@@ -235,11 +235,13 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout :focus-visible { outline: 2.5px solid var(--teal); outline-offset: 2px; }
 .cp-checkout input:focus-visible { outline: none; }
 
-/* Logged-in header: initial in place of the portal's profile photo */
+/* Logged-in header: profile photo, or the candidate's initial when there is none */
 .cp-checkout .cp-avatar-wrap {
   flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
   background: var(--brand-soft); color: var(--brand); font-weight: 800; font-size: 18px;
 }
+.cp-checkout .cp-avatar-wrap { overflow: hidden; }
+.cp-checkout .cp-avatar { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cp-checkout-user h2 { flex: 1; }
 .cp-checkout .logged-in-title { font: inherit; color: inherit; letter-spacing: inherit; }
 

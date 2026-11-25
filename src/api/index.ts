@@ -99,6 +99,13 @@ export const api = {
     }
   },
 
+  /** The candidate's profile photo (a data URL or a web address), or '' when they have none. */
+  async getProfilePhoto(): Promise<string> {
+    const { data } = await call('/user/user-profile.php', { method: 'GET' })
+    const photo = clean((data as Record<string, unknown> | undefined)?.photo)
+    return /^(data:image\/|https:\/\/)/.test(photo) ? photo : ''
+  },
+
   /** Sends the one-time passcode by SMS. The returned key must accompany the passcode. */
   async requestOtp(mobile: string): Promise<{ key: string; message?: string }> {
     const res = await call('/user/authenticate.php', { auth: false, body: { username: mobile } })
