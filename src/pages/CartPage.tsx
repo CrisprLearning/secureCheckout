@@ -621,8 +621,13 @@ export function CartPage() {
                   +
                 </button>
               </span>
-            ) : (line.plans ?? []).length > 0 ? (
-              // Courses and test series show their payment plan where the count would be; a click opens its details.
+            ) : isSingle(line) ? null : (
+              <span className="product-size">x {line.number}</span>
+            )
+          }
+          // The payment plan sits under the row's amount, at the right; a click opens its details.
+          underPrice={(line) =>
+            (line.plans ?? []).length > 0 ? (
               <button
                 type="button"
                 className="plan-chip"
@@ -633,9 +638,7 @@ export function CartPage() {
               >
                 {t.plan.chipLabel} <b>{chosenPlan(line)!.label}</b> <span aria-hidden="true">→</span>
               </button>
-            ) : isSingle(line) ? null : (
-              <span className="product-size">x {line.number}</span>
-            )
+            ) : null
           }
           options={(line) =>
             (line.choices ?? []).map((choice) => {
