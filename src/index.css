@@ -242,7 +242,7 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .apply-btn:disabled { opacity: .5; }
 
 /* Confirmation and orders */
-.cp-checkout .confirm-head { text-align: center; margin-bottom: 18px; }
+.cp-checkout .confirm-head { text-align: center; margin-bottom: 30px; }
 .cp-checkout .status-mark {
   width: 60px; height: 60px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center;
   background: var(--good-soft); color: var(--good-deep); font-size: 28px; font-weight: 800;
