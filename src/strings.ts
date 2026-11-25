@@ -7,7 +7,6 @@ export const t = {
   secure: 'Secure checkout',
   loading: 'Loading',
 
-  /** Label of the portal link for an item type. A type not listed here has no link. */
   plan: {
     title: 'Payment plan',
     payNow: 'Pay now',
@@ -30,7 +29,6 @@ export const t = {
       days === 0 ? 'Due when the course starts' : `Due ${days} ${days === 1 ? 'day' : 'days'} ${before ? 'before' : 'after'} the course starts`,
     noGiftCode: 'Gift cards and discount codes cannot be used with instalment payments',
   },
-  portalButton: { 'Test Series': 'Take the Exam' } as Record<string, string>,
 
   cart: {
     summaryTitle: 'Order Summary',

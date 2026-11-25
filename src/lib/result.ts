@@ -2,7 +2,6 @@
 // The live APIs have no "get my order" call, so this record is the only source for that screen.
 
 import type { CartLine, Summary } from '../api/types'
-import { PORTAL_URL } from '../config'
 
 export interface PaymentRecord {
   /** `unconfirmed`: Razorpay reported success but the server could not confirm it. */
@@ -38,10 +37,4 @@ export function loadResult(): PaymentRecord | null {
   } catch {
     return null
   }
-}
-
-/** Where the portal shows an item of this type. The portal asks for login first if it needs to, then continues there. */
-export function portalUrlFor(type?: string): string {
-  const path = type === 'Course' ? '/courses' : type === 'Test Series' ? '/test-series' : '/'
-  return `${PORTAL_URL}${path}`
 }

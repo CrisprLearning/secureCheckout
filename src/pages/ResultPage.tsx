@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router'
-import type { CartLine } from '../api'
 import { CartLines, SummaryLines } from '../components/CartLines'
 import { Panel } from '../components/Shell'
 import { PORTAL_URL, SUPPORT_EMAIL, SUPPORT_PHONE } from '../config'
 import { track, trackPurchaseOnce } from '../lib/analytics'
 import { forgetCouponCode, rememberCouponCode, saveCart } from '../lib/cart'
 import { formatDate } from '../lib/format'
-import { loadResult, portalUrlFor } from '../lib/result'
+import { loadResult } from '../lib/result'
 import { t } from '../strings'
 
 // What happened to the payment: success, failed (with Retry Payment), or paid-but-not-confirmed.
@@ -118,21 +117,13 @@ export function ResultPage() {
       <CartLines
         lines={record.items}
         planStatus="success"
-        // Only a test series has a button here, straight to its exams.
-        extra={(line: CartLine) =>
-          t.portalButton[line.type] ? (
-            <a className="apply-btn portal-btn" href={portalUrlFor(line.type)}>
-              {t.portalButton[line.type]}
-            </a>
-          ) : null
-        }
       />
       <SummaryLines summary={record.summary} totalLabel={t.result.amountPaid} />
       {facts}
 
       {/* Onward to the page the server named: the test series or course just paid for, or the order. */}
-      <a className="pay-btn track-btn no-print" href={record.portalUrl ?? PORTAL_URL} onClick={() => track('portal_handoff')}>
-        {t.result.track}
+      <a className="apply-btn portal-btn track-btn" href={record.portalUrl ?? PORTAL_URL} onClick={() => track('portal_handoff')}>
+        {t.result.track} <span aria-hidden="true">→</span>
       </a>
 
       <section className="payment-section no-print">
