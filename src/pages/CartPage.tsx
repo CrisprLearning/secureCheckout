@@ -26,6 +26,7 @@ import {
   rememberCouponCode,
   removeFromCart,
   retrieveCart,
+  rowId,
   saveCart,
   setQuantity,
   withChargeLabels,
@@ -107,7 +108,7 @@ export function CartPage() {
   const [verified, setVerified] = useState<VerifiedCart | null>(null)
   const [removing, setRemoving] = useState<CartLine | null>(null)
   // The payment plan popup: which item it is for, and which plan's tab is showing.
-  const [planView, setPlanView] = useState<{ itemId: string; tab: string } | null>(null)
+  const [planView, setPlanView] = useState<{ lineId: string; tab: string } | null>(null)
   const [billing, setBilling] = useState<Billing>(NO_BILLING)
   const [code, setCode] = useState('')
   const [emailTouched, setEmailTouched] = useState(false)
@@ -120,20 +121,22 @@ export function CartPage() {
   // The mobile number identifies the candidate for the length of this page.
   const studentId = student?.mobile
 
-  // Entry point: /cart?addItem={itemId}. The item joins whatever is already in the cart.
+  // Entry point: /cart?addItem={itemId}, with &selection={value} for an item that has options. The item joins whatever is already in the cart.
   useEffect(() => {
     let cancelled = false
     // Held in a ref so the item is added once even when the effect runs twice.
     added.current ??= (async () => {
       const search = window.location.search
-      const addItem = new URLSearchParams(search).get('addItem')
+      const params = new URLSearchParams(search)
+      const addItem = params.get('addItem')
       if (addItem === null) return false
       let failed = false
       try {
         if (!ITEM_ID.test(addItem)) throw new ApiError('item_unavailable')
-        // The catalogue decides the title, type and price; nothing else in the URL is used.
+        // The catalogue decides the title, type, price and options.
         const item = await api.lookupItem(addItem)
-        addToCart(item)
+        // &selection=M picks the item's option (its size); a value the item does not offer is ignored.
+        addToCart(item, params.get('selection'))
         track('view_cart', { item_id: item.code, item_type: item.type })
       } catch (err) {
         failed = true
@@ -239,26 +242,26 @@ export function CartPage() {
 
   function confirmRemove() {
     if (!removing) return
-    removeFromCart(removing.itemId)
+    removeFromCart(rowId(removing))
     setRemoving(null)
     void revalidate()
   }
 
-  function changeQuantity(itemId: string, number: number) {
-    setQuantity(itemId, number)
+  function changeQuantity(lineId: string, number: number) {
+    setQuantity(lineId, number)
     void revalidate()
   }
 
   // A pick does not change the price, so the cart is not re-priced.
-  function chooseOption(itemId: string, name: string, value: string) {
-    const next = setOption(itemId, name, value)
+  function chooseOption(lineId: string, name: string, value: string) {
+    const next = setOption(lineId, name, value)
     setCart(next)
     setVerified((v) => v && { ...v, cart: next })
   }
 
   // An instalment plan changes what is charged now, and rules out gift codes.
-  function choosePlan(itemId: string, type: string) {
-    const next = setPlan(itemId, type)
+  function choosePlan(lineId: string, type: string) {
+    const next = setPlan(lineId, type)
     if (next.some(isInstalment)) {
       forgetCouponCode()
       setCode('')
@@ -290,7 +293,7 @@ export function CartPage() {
   const localSubtotal = cart.reduce((sum, l) => sum + l.unitPrice * l.number, 0)
   const localDueNow = cart.reduce((sum, l) => sum + dueNow(l) * l.number, 0)
   const onInstalments = lines.some(isInstalment)
-  const planLine = planView ? lines.find((l) => l.itemId === planView.itemId && (l.plans ?? []).length > 0) : undefined
+  const planLine = planView ? lines.find((l) => rowId(l) === planView.lineId && (l.plans ?? []).length > 0) : undefined
   const planTab = planLine?.plans!.find((p) => p.type === planView!.tab) ?? (planLine ? chosenPlan(planLine) : undefined)
   // Checked against the pattern once the student leaves the field, and again on Pay.
   // State and City come from the bundled pincode table; a saved value the table does not know shows as unselected.
@@ -586,62 +589,50 @@ export function CartPage() {
 
         <CartLines
           lines={lines}
-          action={(line) =>
+          action={(line) => (
+            <button
+              type="button"
+              className="cart-bin"
+              title={t.cart.remove}
+              aria-label={`${t.cart.remove}: ${line.title}`}
+              onClick={() => setRemoving(line)}
+              disabled={busy}
+            >
+              <TrashIcon />
+            </button>
+          )}
+          quantity={(line) =>
             isDelivered(line) ? (
-              // Books and merchandise: − N + at the row's edge. At one copy the − becomes the bin, which removes the item.
               <span className="qty" role="group" aria-label={`${t.cart.quantity}: ${line.title}`}>
-                {line.number <= 1 ? (
-                  <button
-                    type="button"
-                    className="qty-remove"
-                    title={t.cart.remove}
-                    aria-label={`${t.cart.remove}: ${line.title}`}
-                    onClick={() => setRemoving(line)}
-                    disabled={busy}
-                  >
-                    <TrashIcon />
-                  </button>
-                ) : (
-                  <button type="button" aria-label={t.cart.decrease} onClick={() => changeQuantity(line.itemId, line.number - 1)} disabled={busy}>
-                    −
-                  </button>
-                )}
+                <button
+                  type="button"
+                  aria-label={t.cart.decrease}
+                  onClick={() => changeQuantity(rowId(line), line.number - 1)}
+                  disabled={busy || line.number <= 1}
+                >
+                  −
+                </button>
                 <span aria-live="polite">{line.number}</span>
                 <button
                   type="button"
                   aria-label={t.cart.increase}
-                  onClick={() => changeQuantity(line.itemId, line.number + 1)}
+                  onClick={() => changeQuantity(rowId(line), line.number + 1)}
                   disabled={busy || line.number >= MAX_QUANTITY}
                 >
                   +
                 </button>
               </span>
-            ) : (
-              <button
-                type="button"
-                className="summary-item-remove"
-                title={t.cart.remove}
-                aria-label={`${t.cart.remove}: ${line.title}`}
-                onClick={() => setRemoving(line)}
-                disabled={busy}
-              >
-                <TrashIcon />
-              </button>
-            )
-          }
-          quantity={(line) =>
-            isDelivered(line) ? null : (line.plans ?? []).length > 0 ? (
+            ) : (line.plans ?? []).length > 0 ? (
               // Courses and test series show their payment plan where the count would be; a click opens its details.
               <button
                 type="button"
                 className="plan-chip"
                 aria-haspopup="dialog"
                 aria-label={`${t.plan.title}: ${chosenPlan(line)!.label}. ${t.plan.viewDetails}`}
-                onClick={() => setPlanView({ itemId: line.itemId, tab: chosenPlan(line)!.type })}
+                onClick={() => setPlanView({ lineId: rowId(line), tab: chosenPlan(line)!.type })}
                 disabled={busy}
               >
-                {chosenPlan(line)!.label}
-                <span aria-hidden="true">›</span>
+                <b>{chosenPlan(line)!.label}:</b> {t.plan.viewPlan} <span aria-hidden="true">→</span>
               </button>
             ) : isSingle(line) ? null : (
               <span className="product-size">x {line.number}</span>
@@ -652,20 +643,19 @@ export function CartPage() {
               const picked = line.options?.[choice.name] ?? ''
               return (
                 <label className="option-select" key={choice.name}>
-                  <span className="option-name">{optionLabel(choice.name)}</span>
                   <select
                     className={picked === '' ? 'is-empty' : ''}
                     aria-label={`${optionLabel(choice.name)}: ${line.title}`}
                     value={picked}
-                    onChange={(e) => chooseOption(line.itemId, choice.name, e.target.value)}
+                    onChange={(e) => chooseOption(rowId(line), choice.name, e.target.value)}
                     disabled={busy}
                   >
                     <option value="" disabled>
-                      {t.cart.selectOption}
+                      {t.cart.selectOption(optionLabel(choice.name))}
                     </option>
                     {choice.values.map((value) => (
                       <option key={value} value={value}>
-                        {value}
+                        {optionLabel(choice.name)}: {value}
                       </option>
                     ))}
                   </select>
@@ -676,6 +666,14 @@ export function CartPage() {
         />
 
         {summary && (
+          <div className="coupon-box">
+            <span className="coupon-icon" aria-hidden="true">
+              %
+            </span>
+            <div className="coupon-text">
+              <strong>{t.cart.couponTitle}</strong>
+              <span>{t.cart.couponBody}</span>
+            </div>
           <div className="apply-section">
             {onInstalments ? (
               // Gift codes do not apply to instalments: the field is off, and Apply only explains why.
@@ -713,6 +711,7 @@ export function CartPage() {
                 </button>
               </>
             )}
+          </div>
           </div>
         )}
 
@@ -794,7 +793,7 @@ export function CartPage() {
                   aria-selected={plan.type === planTab.type}
                   aria-controls="plan-panel"
                   className={plan.type === planTab.type ? 'is-active' : ''}
-                  onClick={() => setPlanView({ itemId: planLine.itemId, tab: plan.type })}
+                  onClick={() => setPlanView({ lineId: rowId(planLine), tab: plan.type })}
                   autoFocus={i === 0}
                 >
                   {plan.label}
@@ -839,7 +838,7 @@ export function CartPage() {
                 type="button"
                 className="apply-btn is-primary plan-pay"
                 onClick={() => {
-                  if (chosenPlan(planLine)?.type !== planTab.type) choosePlan(planLine.itemId, planTab.type)
+                  if (chosenPlan(planLine)?.type !== planTab.type) choosePlan(rowId(planLine), planTab.type)
                   setPlanView(null)
                 }}
               >

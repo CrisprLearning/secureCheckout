@@ -52,6 +52,8 @@ export interface CatalogItem {
  * whole cart if a unit price does not match its catalogue, so a stored price can never lower the charge.
  */
 export interface CartLine {
+  /** Identifies the row in the browser: the same item can be in the cart twice, in two sizes. Not sent to the server. */
+  lineId?: string
   itemId: string
   title: string
   type: ItemType

@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { CartLine, ChargeRow, PaymentPlan, Summary } from '../api'
-import { isDelivered, optionLabel } from '../lib/cart'
+import { optionLabel, rowId } from '../lib/cart'
 import { formatINR } from '../lib/format'
 import { chosenPlan, dueText, isInstalment, isSingle } from '../lib/plans'
 import { t } from '../strings'
@@ -44,14 +44,15 @@ export function CartLines({
   options?: (line: CartLine) => ReactNode
 }) {
   return (
-    <div className={`cartItems ${action ? 'has-action' : ''}`}>
+    <div className={`cart-rows ${action ? 'has-action' : ''}`}>
       {lines.map((line) => (
-        <div className={`summary-item ${action && isDelivered(line) ? 'has-qty' : ''}`} key={line.itemId}>
-          {action?.(line)}
-          <div className="product-info">
-            <img src={lineImage(line)} alt="" width="52" height="52" />
-            <div className="product-details">
-              <span className="product-name">{line.title}</span>
+        <div className="cart-row" key={rowId(line)}>
+          <img className="cart-thumb" src={lineImage(line)} alt="" width="64" height="64" />
+          <div className="cart-details">
+            <span className="product-name">{line.title}</span>
+            {line.type && <span className="product-meta">{line.type}</span>}
+            {/* The count comes first, then the pickers (size). */}
+            <div className="cart-controls">
               {quantity ? quantity(line) : !isSingle(line) && <span className="product-size">x {line.number}</span>}
               {options
                 ? options(line)
@@ -60,18 +61,23 @@ export function CartLines({
                       {optionLabel(name)}: {value}
                     </span>
                   ))}
-              {!options && isInstalment(line) && (
-                <>
-                  <span className="product-size">
-                    {t.plan.title}: {chosenPlan(line)!.label}
-                  </span>
-                  <PlanSchedule plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} />
-                </>
-              )}
-              {extra?.(line)}
             </div>
+            {!options && isInstalment(line) && (
+              <>
+                <span className="product-size">
+                  {t.plan.title}: {chosenPlan(line)!.label}
+                </span>
+                <PlanSchedule plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} />
+              </>
+            )}
+            {extra?.(line)}
           </div>
-          <span className="price">{formatINR(line.unitPrice * line.number)}</span>
+          <div className="cart-price">
+            <span className="price">{formatINR(line.unitPrice * line.number)}</span>
+            {/* The price of one, wherever the row can hold several. */}
+            {!isSingle(line) && <span className="unit-price">{t.cart.each(formatINR(line.unitPrice))}</span>}
+          </div>
+          {action?.(line)}
         </div>
       ))}
     </div>

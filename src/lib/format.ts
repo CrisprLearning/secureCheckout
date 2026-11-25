@@ -3,7 +3,7 @@ import { t } from '../strings'
 
 /** Formats paise the way the portal does: 99900 → "₹999.00". */
 export function formatINR(paise: number): string {
-  return `₹${(paise / 100).toFixed(2)}`
+  return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 /** "98XX5XX210", as the portal masks a number on the passcode step. */
