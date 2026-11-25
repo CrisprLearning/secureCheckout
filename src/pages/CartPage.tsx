@@ -15,10 +15,12 @@ import {
   clearCheckoutData,
   forgetCouponCode,
   getCouponCode,
+  hasBooks,
   rememberCouponCode,
   removeFromCart,
   retrieveCart,
   saveCart,
+  withChargeLabels,
 } from '../lib/cart'
 import { addressChars, digits, errorMessage, formatINR, isEmail, isPin, nameChars } from '../lib/format'
 import { districtsOf, loadPincodes, lookupPincode } from '../lib/pincodes'
@@ -50,7 +52,15 @@ async function refreshFromCatalogue(lines: CartLine[]): Promise<{ lines: CartLin
     lines.map(async (line) => {
       try {
         const item = await api.lookupItem(line.itemId)
-        return { ...line, title: item.title, type: item.type, unitPrice: item.sellingPrice, displayImage: item.photo }
+        return {
+          ...line,
+          title: item.title,
+          type: item.type,
+          unitPrice: item.sellingPrice,
+          displayImage: item.photo,
+          isBook: item.isBook,
+          chargeLabels: item.chargeLabels,
+        }
       } catch (err) {
         if (err instanceof ApiError && err.code === 'item_unavailable') return null
         throw err
@@ -146,7 +156,7 @@ export function CartPage() {
           res = await api.validateCart(forServer(lines), wanted)
         }
         // The server's totals with our own lines, which also carry the pictures.
-        setVerified({ cart: lines, summary: res.summary })
+        setVerified({ cart: lines, summary: withChargeLabels(res.summary, lines) })
         if (wanted && res.summary.discount.amount === 0) {
           forgetCouponCode()
           if (opts.applying) toast(t.cart.codeInvalid)
@@ -593,6 +603,12 @@ export function CartPage() {
               </span>
             </div>
           </div>
+        )}
+
+        {hasBooks(cart) && (
+          <p className="delivery-note" role="note">
+            {t.cart.bookDelivery}
+          </p>
         )}
 
         {/* On phones and portrait tablets this bar is pinned to the bottom of the screen, with the total beside it. */}

@@ -2,7 +2,7 @@
 // It can hold several items. Courses and test series are limited to one each; any other type adds to its count.
 // The server checks every stored price against its catalogue before it prices or charges anything.
 
-import type { CartLine, CatalogItem } from '../api/types'
+import type { CartLine, CatalogItem, Summary } from '../api/types'
 
 const CART_KEY = 'crisprCart'
 const CODE_KEY = 'crisprCartDiscountCode'
@@ -43,10 +43,28 @@ export function addToCart(item: CatalogItem): CartLine[] {
   if (found) {
     if (found.type !== 'Course' && found.type !== 'Test Series') found.number += 1
   } else {
-    cart.push({ itemId: item.code, title: item.title, type: item.type, unitPrice: item.sellingPrice, number: 1, displayImage: item.photo })
+    cart.push({
+      itemId: item.code,
+      title: item.title,
+      type: item.type,
+      unitPrice: item.sellingPrice,
+      number: 1,
+      displayImage: item.photo,
+      isBook: item.isBook,
+      chargeLabels: item.chargeLabels,
+    })
   }
   saveCart(cart)
   return cart
+}
+
+export const hasBooks = (lines: CartLine[]) => lines.some((line) => line.isBook)
+
+/** The server names tax and extra rows by charge code (SHIPPING); this swaps in the catalogue's label (Delivery Charges). */
+export function withChargeLabels(summary: Summary, lines: CartLine[]): Summary {
+  const labels: Record<string, string> = Object.assign({}, ...lines.map((line) => line.chargeLabels ?? {}))
+  const relabel = (rows: Summary['taxes'] = []) => rows.map((row) => ({ ...row, label: labels[row.label] ?? row.label }))
+  return { ...summary, taxes: relabel(summary.taxes), extras: relabel(summary.extras) }
 }
 
 export function removeFromCart(itemId: string): CartLine[] {

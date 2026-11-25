@@ -22,6 +22,7 @@ export const t = {
     subtotal: 'Subtotal',
     discounts: 'Discounts',
     total: 'Total',
+    bookDelivery: 'The books in your cart will be delivered to your address. They are usually dispatched in 2 to 4 working days.',
     preLoginNote:
       'Taxes and other charges if applicable, would be computed once user validates their mobile number. Please authenticate your mobile number to redeem Gift Codes',
     codePlaceholder: 'Gift card or discount code',

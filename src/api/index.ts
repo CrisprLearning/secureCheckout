@@ -124,12 +124,22 @@ export const api = {
     const d = res.data as Record<string, unknown> | undefined
     // An unknown code comes back as an empty list rather than an error.
     if (!d || Array.isArray(d) || d.code !== code) throw new ApiError('item_unavailable')
+    const charges = (Array.isArray(d.taxDetails) ? d.taxDetails : []) as Record<string, unknown>[]
+    const chargeLabels: Record<string, string> = {}
+    for (const c of charges) {
+      if (clean(c.code) && clean(c.label)) chargeLabels[clean(c.code)] = clean(c.label)
+    }
+    const type = clean(d.type)
     return {
       code,
-      type: clean(d.type),
+      type,
       title: clean(d.title),
       sellingPrice: Number(d.sellingPrice),
       photo: clean(d.photo) || undefined,
+      // Books are catalogue type 3. The API names types 1 and 2 only and sends an empty name for a book today,
+      // so until it names them, an unnamed item with a shipping charge is taken to be a book.
+      isBook: type === 'Book' || type === '3' || (type === '' && charges.some((c) => clean(c.code) === 'SHIPPING')),
+      chargeLabels,
     }
   },
 

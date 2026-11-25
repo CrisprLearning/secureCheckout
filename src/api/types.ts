@@ -11,6 +11,10 @@ export interface CatalogItem {
   title: string
   sellingPrice: number
   photo?: string
+  /** A printed book: it is delivered to the billing address. */
+  isBook: boolean
+  /** Display names of this item's taxes and extra charges, by charge code (for example SHIPPING: 'Delivery Charges'). */
+  chargeLabels: Record<string, string>
 }
 
 /**
@@ -24,6 +28,8 @@ export interface CartLine {
   unitPrice: number
   number: number
   displayImage?: string
+  isBook?: boolean
+  chargeLabels?: Record<string, string>
 }
 
 export interface Summary {

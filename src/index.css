@@ -494,9 +494,11 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .cartSummary.sk-panel { gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
 .cp-checkout .sk-inline { display: inline-block; width: 86px; height: 18px; border-radius: 8px; vertical-align: middle; }
 
-/* "Could not confirm" screen: who to contact, as a yellow note */
-.cp-checkout .support-note {
-  margin: 4px 0 6px; padding: 12px 14px; border-radius: 14px; text-align: left;
+/* Yellow notes: who to contact on the "could not confirm" screen, and book delivery under the cart total */
+.cp-checkout .delivery-note { margin: 12px 0 0; }
+.cp-checkout .support-note { margin: 4px 0 6px; }
+.cp-checkout .support-note, .cp-checkout .delivery-note {
+  padding: 12px 14px; border-radius: 14px; text-align: left;
   background: #fff6d9; border: 1px solid #f3d27a; color: var(--warn-ink);
   font-size: 13px; font-weight: 500; line-height: 1.55;
 }
