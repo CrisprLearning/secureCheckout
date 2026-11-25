@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from './api'
 import type { Student } from './api'
+import { isAnotherCandidate } from './lib/handoff'
 
 interface SessionValue {
   /** undefined while the session is still being checked. */
@@ -18,7 +19,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     let cancelled = false
     api
       .getSession()
-      .then((s) => !cancelled && setStudent(s))
+      .then((s) => {
+        // Sent here by the portal on behalf of a different candidate: this one is logged out.
+        if (s && isAnotherCandidate(s.mobile)) {
+          api.logout()
+          s = null
+        }
+        if (!cancelled) setStudent(s)
+      })
       .catch(() => !cancelled && setStudent(null))
     return () => {
       cancelled = true

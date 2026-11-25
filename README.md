@@ -56,6 +56,9 @@ Notes on behaviour:
   then refreshes the lines from the catalogue and prices it once more.
 - **Session.** The token from `login.php` is kept in the `crispriteUserToken` cookie for 7 days and sent as a
   Bearer token. The APIs report a bad token in the response body (HTTP 200), which logs the student out here.
+- **Coming from the portal.** The portal's Enroll links end in `#u=<mark>`, a short fingerprint of the mobile
+  number logged in there (`src/lib/handoff.ts`). If this site holds a different candidate's login, it is logged
+  out and the student logs in afresh. Links without the mark behave as before.
 - **Payment result.** There is no "get my order" API, so the result screen is built from what the browser knows
   and kept in `sessionStorage` for the tab. A payment Razorpay reports as successful but the server does not
   confirm is shown as "could not confirm", never as a failure with a retry.
