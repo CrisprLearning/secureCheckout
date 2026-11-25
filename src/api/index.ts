@@ -10,7 +10,7 @@
 //
 // Every script answers HTTP 200 with { status: "success", data } or { status: "error" | "failed", error | message }.
 
-import { API_BASE_URL } from '../config'
+import { API_BASE_URL, PORTAL_URL } from '../config'
 import { clearToken, getToken, setToken } from '../lib/auth'
 import { ApiError } from './types'
 import type { Billing, CartLine, CatalogItem, PaymentOrder, PaymentProof, Student, VerifiedCart } from './types'
@@ -193,8 +193,12 @@ export const api = {
   },
 
   /** The server checks Razorpay's signature and enrols the candidate. Resolves only when it confirms the payment. */
-  async acknowledgePayment(order: PaymentOrder, proof: PaymentProof): Promise<void> {
-    await call('/user/checkout/acknowledge-purchase.php', {
+  /**
+   * Confirms the payment with the server. Resolves with the Students Portal page to open next (the test
+   * series or course just paid for, or the order), when the server names one on the portal.
+   */
+  async acknowledgePayment(order: PaymentOrder, proof: PaymentProof): Promise<string | undefined> {
+    const res = await call('/user/checkout/acknowledge-purchase.php', {
       body: {
         orderID: order.order,
         transactionID: proof.razorpayPaymentId,
@@ -202,5 +206,12 @@ export const api = {
         razorpay_signature: proof.razorpaySignature,
       },
     })
+    const redirect = clean((res.data as { redirectUrl?: unknown } | undefined)?.redirectUrl)
+    // Only ever follow a link to the portal itself.
+    try {
+      return redirect && new URL(redirect).origin === new URL(PORTAL_URL).origin ? redirect : undefined
+    } catch {
+      return undefined
+    }
   },
 }

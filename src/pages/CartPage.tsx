@@ -123,6 +123,7 @@ export function CartPage() {
   const [phase, setPhase] = useState<'idle' | 'opening' | 'verifying'>('idle')
   const added = useRef<Promise<boolean> | null>(null)
   const paying = useRef(false)
+  const leaving = useRef(false)
   // The mobile number identifies the candidate for the length of this page.
   const studentId = student?.mobile
 
@@ -380,9 +381,16 @@ export function CartPage() {
       // Never show success from the browser result alone: the server checks Razorpay's signature first.
       setPhase('verifying')
       try {
-        await api.acknowledgePayment(order, result)
+        const portalPage = await api.acknowledgePayment(order, result)
         clearCheckoutData()
         saveResult(attempt(order, { status: 'success', paymentId: result.razorpayPaymentId }))
+        // The server says where to go next: the test series or course just paid for, or the order itself.
+        if (portalPage) {
+          track('portal_handoff')
+          leaving.current = true
+          window.location.assign(portalPage)
+          return
+        }
       } catch (err) {
         // Money has moved but the server did not confirm it. Never offer to pay again from here.
         clearCheckoutData()
@@ -408,7 +416,8 @@ export function CartPage() {
       }
     } finally {
       paying.current = false
-      setPhase('idle')
+      // On the way to the portal the "confirming" popup stays up until the browser leaves.
+      if (!leaving.current) setPhase('idle')
     }
   }
 

@@ -3,6 +3,7 @@
 
 type EventName =
   | 'view_cart'
+  | 'portal_handoff'
   | 'login_started'
   | 'login_completed'
   | 'begin_checkout'
