@@ -28,6 +28,30 @@ export function PlanSchedule({ plan, commencement, count }: { plan: PaymentPlan;
   )
 }
 
+/** The info icon beside "Payment plan: Installments". Hovering, focusing or clicking it shows the instalments. */
+function PlanInfo({ line }: { line: CartLine }) {
+  const [open, setOpen] = useState(false)
+  const id = useId()
+  return (
+    <span className={`charge-info ${open ? 'is-open' : ''}`} onMouseLeave={() => setOpen(false)}>
+      <button
+        type="button"
+        aria-label={t.plan.viewDetails}
+        aria-expanded={open}
+        aria-describedby={id}
+        onClick={() => setOpen((o) => !o)}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
+      >
+        i
+      </button>
+      <span className="charge-split plan-split" role="tooltip" id={id}>
+        <PlanSchedule plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} />
+      </span>
+    </span>
+  )
+}
+
 /** The item rows of the order summary. `action` adds a control at the row's edge, `extra` one under its title; `quantity` draws the count; without it books and merchandise show "x 2" and courses and test series show nothing. */
 export function CartLines({
   lines,
@@ -36,6 +60,7 @@ export function CartLines({
   quantity,
   options,
   underPrice,
+  planBehindIcon = false,
 }: {
   lines: CartLine[]
   action?: (line: CartLine) => ReactNode
@@ -45,6 +70,8 @@ export function CartLines({
   options?: (line: CartLine) => ReactNode
   /** Drawn in the price column, under the amount and its small print. */
   underPrice?: (line: CartLine) => ReactNode
+  /** Keeps an instalment schedule behind an info icon instead of listing it under the item. */
+  planBehindIcon?: boolean
 }) {
   return (
     <div className={`cart-rows ${action ? 'has-action' : ''}`}>
@@ -67,10 +94,11 @@ export function CartLines({
             </div>
             {!options && isInstalment(line) && (
               <>
-                <span className="product-size">
+                <span className="product-size plan-line">
                   {t.plan.title}: {chosenPlan(line)!.label}
+                  {planBehindIcon && <PlanInfo line={line} />}
                 </span>
-                <PlanSchedule plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} />
+                {!planBehindIcon && <PlanSchedule plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} />}
               </>
             )}
             {extra?.(line)}

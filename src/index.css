@@ -674,3 +674,8 @@ body { margin: 0; background: var(--bg); }
 @media (max-width: 768px) {
   .cp-checkout .opt-select.is-field .opt-select-button { font-size: 16px; }
 }
+
+/* Failed screen: the instalment schedule sits behind the info icon beside "Payment plan: Installments" */
+.cp-checkout .plan-line { display: inline-flex; align-items: center; gap: 6px; }
+.cp-checkout .charge-split.plan-split { width: 250px; max-width: 76vw; padding: 6px; background: #fff; border: 1px solid var(--line); color: var(--ink); }
+.cp-checkout .plan-split .plan-schedule { margin: 0; }

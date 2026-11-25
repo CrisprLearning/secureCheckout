@@ -103,7 +103,7 @@ export function ResultPage() {
             {t.result.failedBody}
           </p>
         </div>
-        <CartLines lines={record.items} />
+        <CartLines lines={record.items} planBehindIcon />
         <SummaryLines summary={record.summary} totalLabel={t.result.amountDue} />
         <button className="pay-btn" type="button" onClick={retry}>
           {t.result.retry}
