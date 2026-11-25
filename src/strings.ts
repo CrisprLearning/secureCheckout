@@ -13,6 +13,7 @@ export const t = {
     payNow: 'Pay now',
     viewDetails: 'View details',
     chipLabel: 'Payment Plan:',
+    taxNote: '* Taxes as Applicable',
     overallFee: (amount: string) => `overall fee ${amount}`,
     titleFor: 'Payment plan - for',
     payFull: 'Pay Full Amount',

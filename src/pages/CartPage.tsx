@@ -817,7 +817,10 @@ export function CartPage() {
                     <th scope="row" colSpan={2}>
                       {t.cart.total}
                     </th>
-                    <td>{formatINR(planTab.installments.reduce((sum, i) => sum + i.amount, 0) * planLine.number)}</td>
+                    <td>
+                      {formatINR(planTab.installments.reduce((sum, i) => sum + i.amount, 0) * planLine.number)}
+                      <span aria-hidden="true">*</span>
+                    </td>
                   </tr>
                 </tfoot>
               </table>
@@ -839,6 +842,7 @@ export function CartPage() {
                 <span>{formatINR(dueNow({ ...planLine, plan: planTab.type }) * planLine.number)}</span>
               </button>
             </div>
+            <p className="plan-tax-note">{t.plan.taxNote}</p>
           </div>
         </div>
       )}
