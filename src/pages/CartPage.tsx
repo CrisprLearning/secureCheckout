@@ -6,6 +6,7 @@ import { Avatar } from '../components/Avatar'
 import { CartLines, SummaryLines } from '../components/CartLines'
 import { chosenPlan, dueNow, dueText, isInstalment, isSingle } from '../lib/plans'
 import { EmptyState } from '../components/EmptyState'
+import { OptionSelect } from '../components/OptionSelect'
 import { LoginPanel } from '../components/LoginPanel'
 import { LoaderScreen, TrashIcon } from '../components/Shell'
 import { CartSkeleton, SummaryShimmer } from '../components/Skeleton'
@@ -47,6 +48,8 @@ const NO_BILLING: Billing = { fullname: '', address: '', locality: '', city: '',
 function billingFor(student: Student): Billing {
   return { ...NO_BILLING, fullname: student.name, ...student.billing }
 }
+
+const FIRST_STATE = 'Kerala'
 
 /** The fields the server expects for a cart line, and nothing else. */
 const forServer = (lines: CartLine[]): CartLine[] =>
@@ -298,6 +301,8 @@ export function CartPage() {
   // State and City come from the bundled pincode table; a saved value the table does not know shows as unselected.
   const cities = places ? districtsOf(places, billing.state) : []
   const stateKnown = !!places && places.states.includes(billing.state)
+  // Most students are from Kerala, so it leads the list; the rest stay in alphabetical order.
+  const stateChoices = places ? [...places.states.filter((st) => st === FIRST_STATE), ...places.states.filter((st) => st !== FIRST_STATE)] : []
   const cityKnown = cities.includes(billing.city)
   const pinMatch = places && isPin(billing.pincode) ? lookupPincode(places, billing.pincode) : null
   const pinUnknown = !!places && isPin(billing.pincode) && !pinMatch
@@ -493,32 +498,26 @@ export function CartPage() {
                 onChange={(e) => changePincode(digits(e.target.value, 6))}
                 onBlur={() => setPinTouched(true)}
               />
-              <select
-                autoComplete="address-level1"
-                aria-label={t.billing.state}
-                className={billing.state ? '' : 'is-empty'}
+              <OptionSelect
+                variant="field"
+                label={t.billing.state}
+                placeholder={t.billing.state}
+                ariaLabel={t.billing.state}
+                values={stateChoices}
                 value={stateKnown ? billing.state : ''}
                 disabled={!places}
-                onChange={(e) => setBilling((b) => ({ ...b, state: e.target.value, city: '' }))}
-              >
-                <option value="">{t.billing.state}</option>
-                {places?.states.map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </select>
-              <select
-                autoComplete="address-level2"
-                aria-label={t.billing.city}
-                className={billing.city ? '' : 'is-empty'}
+                onChange={(state) => setBilling((b) => ({ ...b, state, city: '' }))}
+              />
+              <OptionSelect
+                variant="field"
+                label={t.billing.city}
+                placeholder={t.billing.city}
+                ariaLabel={t.billing.city}
+                values={cities}
                 value={cityKnown ? billing.city : ''}
                 disabled={!stateKnown}
-                onChange={(e) => setField('city', e.target.value)}
-              >
-                <option value="">{t.billing.city}</option>
-                {cities.map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
+                onChange={(city) => setField('city', city)}
+              />
             </div>
             {pinError ? (
               <p id="pin-error" className="field-error" role="alert">
@@ -647,24 +646,16 @@ export function CartPage() {
             (line.choices ?? []).map((choice) => {
               const picked = line.options?.[choice.name] ?? ''
               return (
-                <label className="option-select" key={choice.name}>
-                  <select
-                    className={picked === '' ? 'is-empty' : ''}
-                    aria-label={`${optionLabel(choice.name)}: ${line.title}`}
-                    value={picked}
-                    onChange={(e) => chooseOption(rowId(line), choice.name, e.target.value)}
-                    disabled={busy}
-                  >
-                    <option value="" disabled>
-                      {t.cart.selectOption(optionLabel(choice.name))}
-                    </option>
-                    {choice.values.map((value) => (
-                      <option key={value} value={value}>
-                        {optionLabel(choice.name)}: {value}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <OptionSelect
+                  key={choice.name}
+                  label={optionLabel(choice.name)}
+                  values={choice.values}
+                  value={picked}
+                  placeholder={t.cart.selectOption(optionLabel(choice.name))}
+                  ariaLabel={`${optionLabel(choice.name)}: ${line.title}`}
+                  disabled={busy}
+                  onChange={(value) => chooseOption(rowId(line), choice.name, value)}
+                />
               )
             })
           }
