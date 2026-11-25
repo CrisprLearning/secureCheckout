@@ -103,8 +103,13 @@ export function ResultPage() {
   return (
     <Panel>
       <div className="confirm-head">
-        <div className="status-mark" aria-hidden="true">
-          ✓
+        {/* A filled green badge with the tick drawn in. */}
+        <div className="status-mark is-success" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="64" height="64" fill="none">
+            <circle cx="32" cy="32" r="30" className="success-ring" />
+            <circle cx="32" cy="32" r="23" className="success-disc" />
+            <path d="M21.5 33.2l7.2 7.1 14.2-15" className="success-tick" />
+          </svg>
         </div>
         <h2>{t.result.successTitle}</h2>
         <p className="lead">{t.result.successBody}</p>
