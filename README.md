@@ -26,7 +26,7 @@ Public build-time variables (see `.env.example`); all optional. For deploys, set
 | --- | --- | --- |
 | `VITE_API_BASE` | `https://crisprtech.app/crispr-apis` | The candidate APIs. |
 | `VITE_PORTAL_URL` | `https://candidate.crisprlearning.com` | Where students go after paying. |
-| `VITE_SHARED_LOGIN_COOKIE` | off | `true` keeps the login cookie on `.crisprlearning.com` so the portal is already logged in. See below. |
+| `VITE_SHARED_LOGIN_COOKIE` | on | `false` keeps the login cookie on this site alone instead of sharing it with the portal. See below. |
 
 ## Routes
 
@@ -54,7 +54,7 @@ Notes on behaviour:
 - **Cart.** Kept in `localStorage` (`src/lib/cart.ts`) in the portal's format; it can hold several items, one each
   of a course or test series. The server rejects a cart whose stored prices differ from its catalogue; the app
   then refreshes the lines from the catalogue and prices it once more.
-- **Session.** The token from `login.php` is kept in the `crispriteUserToken` cookie for 7 days and sent as a
+- **Session.** The token from `login.php` is kept in the `crispriteUserToken` cookie (shared with the portal) for 7 days and sent as a
   Bearer token. The APIs report a bad token in the response body (HTTP 200), which logs the student out here.
 - **Coming from the portal.** The portal's Enroll links end in `#u=<mark>`, a short fingerprint of the mobile
   number logged in there (`src/lib/handoff.ts`). If this site holds a different candidate's login, it is logged
@@ -63,12 +63,13 @@ Notes on behaviour:
   and kept in `sessionStorage` for the tab. A payment Razorpay reports as successful but the server does not
   confirm is shown as "could not confirm", never as a failure with a retry.
 
-## Logging in to the portal after payment
+## One login with the portal
 
-By default the login cookie belongs to this site only, so the portal asks the student to log in again.
-`VITE_SHARED_LOGIN_COOKIE=true` sets the cookie for `.crisprlearning.com` instead, and the portal picks it up.
-Before turning it on, change the portal's `clearToken()` to also clear the cookie with
-`domain=.crisprlearning.com`; otherwise logging out of the portal leaves this cookie behind.
+On `crisprlearning.com` the login cookie is set for the whole domain (`.crisprlearning.com`), and the portal
+does the same (`src/lib/auth.js` there). A student logged in on the portal arrives here already logged in, one
+who logs in here is logged in on the portal after paying, and logging out of either logs out of both.
+A login made before this (a cookie of one site alone) is replaced by the shared one, or becomes it when there
+is none. `VITE_SHARED_LOGIN_COOKIE=false` keeps the cookie on this site alone.
 
 ## Layout
 

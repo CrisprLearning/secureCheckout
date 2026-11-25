@@ -13,10 +13,10 @@ export const PORTAL_URL: string = (env.VITE_PORTAL_URL || 'https://candidate.cri
 export const API_BASE_URL: string = (env.VITE_API_BASE || 'https://crisprtech.app/crispr-apis').replace(/\/+$/, '')
 
 /**
- * Set VITE_SHARED_LOGIN_COOKIE=true to keep the login cookie on the whole domain, so the portal sees it too.
- * See src/lib/auth.ts before turning it on.
+ * The login cookie is kept on the whole domain, so this site and the candidate portal share one login.
+ * VITE_SHARED_LOGIN_COOKIE=false keeps it on this site alone. See src/lib/auth.ts.
  */
-export const SHARED_LOGIN_DOMAIN: string | null = env.VITE_SHARED_LOGIN_COOKIE === 'true' ? '.crisprlearning.com' : null
+export const SHARED_LOGIN_DOMAIN: string | null = env.VITE_SHARED_LOGIN_COOKIE === 'false' ? null : '.crisprlearning.com'
 
 export const SUPPORT_PHONE = '9809677798'
 export const SUPPORT_EMAIL = 'support@crisprlearning.com'
