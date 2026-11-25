@@ -29,7 +29,50 @@ export function PlanSchedule({ plan, commencement, count }: { plan: PaymentPlan;
 }
 
 /** The info icon beside "Payment plan: Installments". Hovering, focusing or clicking it shows the instalments. */
-function PlanInfo({ line }: { line: CartLine }) {
+/** How the first payment of a plan went: it decides the mark on the first step of the timeline. */
+type PlanStatus = 'success' | 'failed' | 'unconfirmed'
+
+const FIRST_STEP_MARK: Record<PlanStatus, ReactNode> = {
+  // Paid: a tick.
+  success: <path d="M3.5 8.4l2.8 2.8 6.2-6.4" />,
+  // Payment failed: a cross.
+  failed: <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" />,
+  // Paid but not confirmed yet: a clock.
+  unconfirmed: (
+    <>
+      <circle cx="8" cy="8" r="5.4" />
+      <path d="M8 5v3.3l2.1 1.3" />
+    </>
+  ),
+}
+
+/** The instalments of a plan as a timeline: the payment made at checkout first, then each one still to come. */
+function PlanTimeline({ plan, commencement, count, status }: { plan: PaymentPlan; commencement?: string; count: number; status: PlanStatus }) {
+  // What is paid at checkout comes first, whatever order the plan lists it in.
+  const steps = [...plan.installments.filter((i) => i.dueDate === ''), ...plan.installments.filter((i) => i.dueDate !== '')]
+  return (
+    <ol className="plan-timeline">
+      {steps.map((inst, i) => (
+        <li key={i} className={i === 0 ? `is-first is-${status}` : ''}>
+          <span className="plan-timeline-mark" aria-hidden="true">
+            {i === 0 && (
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {FIRST_STEP_MARK[status]}
+              </svg>
+            )}
+          </span>
+          <span className="plan-timeline-text">
+            <span>{inst.label}</span>
+            <small>{i === 0 ? t.plan.firstStep[status] : dueText(inst, commencement)}</small>
+          </span>
+          <span className="plan-timeline-amount">{formatINR(inst.amount * count)}</span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+function PlanInfo({ line, status }: { line: CartLine; status: PlanStatus }) {
   const [open, setOpen] = useState(false)
   const id = useId()
   return (
@@ -46,7 +89,7 @@ function PlanInfo({ line }: { line: CartLine }) {
         i
       </button>
       <span className="charge-split plan-split" role="tooltip" id={id}>
-        <PlanSchedule plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} />
+        <PlanTimeline plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} status={status} />
       </span>
     </span>
   )
@@ -60,7 +103,7 @@ export function CartLines({
   quantity,
   options,
   underPrice,
-  planBehindIcon = false,
+  planStatus,
 }: {
   lines: CartLine[]
   action?: (line: CartLine) => ReactNode
@@ -70,8 +113,8 @@ export function CartLines({
   options?: (line: CartLine) => ReactNode
   /** Drawn in the price column, under the amount and its small print. */
   underPrice?: (line: CartLine) => ReactNode
-  /** Keeps an instalment schedule behind an info icon instead of listing it under the item. */
-  planBehindIcon?: boolean
+  /** After a payment: keeps an instalment schedule behind an info icon, as a timeline whose first step shows how that payment went. */
+  planStatus?: PlanStatus
 }) {
   return (
     <div className={`cart-rows ${action ? 'has-action' : ''}`}>
@@ -96,9 +139,9 @@ export function CartLines({
               <>
                 <span className="product-size plan-line">
                   {t.plan.title}: {chosenPlan(line)!.label}
-                  {planBehindIcon && <PlanInfo line={line} />}
+                  {planStatus && <PlanInfo line={line} status={planStatus} />}
                 </span>
-                {!planBehindIcon && <PlanSchedule plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} />}
+                {!planStatus && <PlanSchedule plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} />}
               </>
             )}
             {extra?.(line)}

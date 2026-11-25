@@ -7,12 +7,13 @@ export const t = {
   secure: 'Secure checkout',
   loading: 'Loading',
 
-  /** Label of the portal link for an item type; anything else falls back to `portalDefault`. */
+  /** Label of the portal link for an item type. A type not listed here has no link. */
   plan: {
     title: 'Payment plan',
     payNow: 'Pay now',
     viewDetails: 'View details',
     chipLabel: 'Payment Plan:',
+    firstStep: { success: 'Paid', failed: 'Payment failed', unconfirmed: 'Awaiting confirmation' },
     taxNote: '* Taxes as Applicable',
     overallFee: (amount: string) => `overall fee ${amount}`,
     titleFor: 'Payment plan - for',
@@ -30,7 +31,6 @@ export const t = {
     noGiftCode: 'Gift cards and discount codes cannot be used with instalment payments',
   },
   portalButton: { 'Test Series': 'Take the Exam' } as Record<string, string>,
-  portalDefault: 'Go to the Students Portal',
 
   cart: {
     summaryTitle: 'Order Summary',

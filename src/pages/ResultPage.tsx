@@ -64,7 +64,7 @@ export function ResultPage() {
             {t.result.failedBody}
           </p>
         </div>
-        <CartLines lines={record.items} planBehindIcon />
+        <CartLines lines={record.items} planStatus="failed" />
         <SummaryLines summary={record.summary} totalLabel={t.result.amountDue} />
         <button className="pay-btn" type="button" onClick={retry}>
           {t.result.retry}
@@ -93,7 +93,7 @@ export function ResultPage() {
             {t.result.supportNoteAfter}
           </p>
         </div>
-        <CartLines lines={record.items} planBehindIcon />
+        <CartLines lines={record.items} planStatus="unconfirmed" />
         <SummaryLines summary={record.summary} totalLabel={t.result.amountPaid} />
         {facts}
       </Panel>
@@ -117,14 +117,14 @@ export function ResultPage() {
 
       <CartLines
         lines={record.items}
-        planBehindIcon
-        // Courses have no button of their own; the page moves on to the Students Portal by itself.
+        planStatus="success"
+        // Only a test series has a button here, straight to its exams.
         extra={(line: CartLine) =>
-          line.type === 'Course' ? null : (
+          t.portalButton[line.type] ? (
             <a className="apply-btn portal-btn" href={portalUrlFor(line.type)}>
-              {t.portalButton[line.type] ?? t.portalDefault}
+              {t.portalButton[line.type]}
             </a>
-          )
+          ) : null
         }
       />
       <SummaryLines summary={record.summary} totalLabel={t.result.amountPaid} />

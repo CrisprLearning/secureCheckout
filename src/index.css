@@ -702,3 +702,21 @@ body { margin: 0; background: var(--bg); }
   .cp-checkout .no-print, .cp-checkout .portal-btn, .cp-checkout .charge-info, .toaster { display: none !important; }
   .cp-checkout .status-mark.is-success svg { animation: none; }
 }
+
+/* After a payment: the plan's instalments as a timeline behind the info icon. The first step shows how the payment went. */
+.cp-checkout .charge-split.plan-split { width: 270px; padding: 12px 12px 10px; }
+.cp-checkout .plan-timeline { list-style: none; margin: 0; padding: 0; }
+.cp-checkout .plan-timeline li { position: relative; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; column-gap: 10px; padding-bottom: 14px; }
+.cp-checkout .plan-timeline li:last-child { padding-bottom: 0; }
+/* The line joining one step to the next. */
+.cp-checkout .plan-timeline li:not(:last-child)::before { content: ''; position: absolute; left: 9px; top: 20px; bottom: -2px; width: 2px; background: var(--line); }
+.cp-checkout .plan-timeline-mark { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; box-sizing: border-box; border: 2px solid var(--line); background: #fff; color: #fff; }
+.cp-checkout .plan-timeline li.is-success .plan-timeline-mark { border-color: #1f9d6b; background: #1f9d6b; }
+.cp-checkout .plan-timeline li.is-failed .plan-timeline-mark { border-color: var(--bad-ink); background: var(--bad-ink); }
+.cp-checkout .plan-timeline li.is-unconfirmed .plan-timeline-mark { border-color: #d98a00; background: #d98a00; }
+.cp-checkout .plan-timeline-text { display: flex; flex-direction: column; min-width: 0; font-size: 12.5px; font-weight: 700; color: var(--ink); line-height: 1.35; }
+.cp-checkout .plan-timeline-text small { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+.cp-checkout .plan-timeline li.is-success .plan-timeline-text small { color: #17805a; font-weight: 700; }
+.cp-checkout .plan-timeline li.is-failed .plan-timeline-text small { color: var(--bad-ink); font-weight: 700; }
+.cp-checkout .plan-timeline li.is-unconfirmed .plan-timeline-text small { color: #a36700; font-weight: 700; }
+.cp-checkout .plan-timeline-amount { font-size: 12.5px; font-weight: 700; color: var(--ink); white-space: nowrap; }
