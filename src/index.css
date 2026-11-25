@@ -599,3 +599,4 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .charge-split strong { display: block; margin-bottom: 4px; font-weight: 700; }
 .cp-checkout .charge-split-row { display: flex; justify-content: space-between; gap: 16px; }
 .cp-checkout .charge-split-row span:last-child { white-space: nowrap; font-weight: 700; }
+.cp-checkout .charge-split-row em { font-style: normal; opacity: .75; white-space: nowrap; }

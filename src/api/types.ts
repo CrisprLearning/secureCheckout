@@ -75,7 +75,8 @@ export interface CartLine {
 export interface ChargeRow {
   label: string
   value: number
-  items?: { itemId: string; value: number; title?: string }[]
+  /** `percent` is the rate of a percentage charge (18 for 18%); a fixed charge has none. */
+  items?: { itemId: string; value: number; title?: string; percent?: number }[]
 }
 
 export interface Summary {

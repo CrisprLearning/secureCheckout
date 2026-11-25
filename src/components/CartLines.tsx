@@ -99,7 +99,10 @@ function ChargeSplit({ row }: { row: ChargeRow }) {
         <strong>{t.cart.chargeSplitTitle(row.label)}</strong>
         {row.items!.map((item) => (
           <span className="charge-split-row" key={item.itemId}>
-            <span>{item.title ?? item.itemId}</span>
+            <span>
+              {item.title ?? item.itemId}
+              {typeof item.percent === 'number' && <em> ({item.percent}%)</em>}
+            </span>
             <span>{formatINR(item.value)}</span>
           </span>
         ))}
