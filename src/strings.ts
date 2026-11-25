@@ -12,7 +12,7 @@ export const t = {
     title: 'Payment plan',
     payNow: 'Pay now',
     viewDetails: 'View details',
-    viewPlan: 'View plan',
+    chipLabel: 'Payment Plan:',
     titleFor: 'Payment plan - for',
     payFull: 'Pay Full Amount',
     payFirst: 'Pay First Installment',

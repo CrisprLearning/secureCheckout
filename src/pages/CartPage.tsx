@@ -632,7 +632,7 @@ export function CartPage() {
                 onClick={() => setPlanView({ lineId: rowId(line), tab: chosenPlan(line)!.type })}
                 disabled={busy}
               >
-                <b>{chosenPlan(line)!.label}:</b> {t.plan.viewPlan} <span aria-hidden="true">→</span>
+                {t.plan.chipLabel} <b>{chosenPlan(line)!.label}</b> <span aria-hidden="true">→</span>
               </button>
             ) : isSingle(line) ? null : (
               <span className="product-size">x {line.number}</span>
