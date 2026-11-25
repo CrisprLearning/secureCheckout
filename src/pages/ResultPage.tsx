@@ -132,7 +132,7 @@ export function ResultPage() {
             {t.result.supportNoteAfter}
           </p>
         </div>
-        <CartLines lines={record.items} />
+        <CartLines lines={record.items} planBehindIcon />
         <SummaryLines summary={record.summary} totalLabel={t.result.amountPaid} />
         {facts}
       </Panel>
