@@ -4,10 +4,13 @@
 import type { CartLine, Installment, PaymentPlan } from '../api/types'
 import { t } from '../strings'
 
-/** The plan a line is on: the buyer's pick, or the catalogue's first plan until they pick one. */
+/** The plan a line is on: the buyer's pick, or Full Payment until they pick one. */
 export function chosenPlan(line: CartLine): PaymentPlan | undefined {
-  return line.plans?.find((p) => p.type === line.plan) ?? line.plans?.[0]
+  return line.plans?.find((p) => p.type === line.plan) ?? line.plans?.find((p) => p.type === 'FULL') ?? line.plans?.[0]
 }
+
+/** Courses and test series are bought one at a time, so their rows show no count. */
+export const isSingle = (line: CartLine) => line.type === 'Course' || line.type === 'Test Series'
 
 /** True when part of the line's price is paid after checkout. */
 export function isInstalment(line: CartLine): boolean {

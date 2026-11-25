@@ -11,6 +11,15 @@ export const t = {
   plan: {
     title: 'Payment plan',
     payNow: 'Pay now',
+    viewDetails: 'View details',
+    selected: 'Selected',
+    choose: (label: string) => `Choose ${label}`,
+    close: 'Close',
+    colPayment: 'Payment',
+    colWhen: 'When',
+    colAmount: 'Amount',
+    fullNote: 'The whole amount is paid now, at checkout.',
+    instalmentNote: 'Only the part marked "Pay now" is charged at checkout. Gift cards and discount codes cannot be used with instalments.',
     later: 'Pay later',
     dueOn: (date: string) => `Due ${date}`,
     relativeToStart: (days: number, before: boolean) =>

@@ -541,3 +541,30 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .plan-schedule li span:last-child { grid-column: 1 / -1; font-size: 11.5px; font-weight: 600; color: var(--muted); }
 .cp-checkout .plan-schedule li.is-now span:last-child { color: var(--brand); font-weight: 700; }
 .cp-checkout .plan-note { margin: 12px 0 4px; font-size: 12.5px; font-weight: 500; color: var(--muted); }
+
+/* Payment plan chip (in place of the count on courses and test series) and its details popup */
+.cp-checkout .plan-chip {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin-top: 6px; padding: 5px 10px;
+  border: 1.5px solid var(--line); border-radius: 999px; background: var(--brand-soft); color: var(--brand);
+  font-size: 12.5px; font-weight: 700;
+}
+.cp-checkout .plan-chip:hover { border-color: var(--brand); }
+.cp-checkout .plan-chip span { font-size: 14px; line-height: 1; }
+.cp-checkout .modal.plan-modal { max-width: 480px; }
+.cp-checkout .plan-tabs { display: flex; gap: 6px; padding: 4px; border-radius: 14px; background: var(--brand-soft); }
+.cp-checkout .plan-tabs button {
+  flex: 1 1 0; min-width: 0; padding: 9px 10px; border: none; border-radius: 10px; background: none;
+  color: var(--brand); font-size: 13.5px; font-weight: 700;
+}
+.cp-checkout .plan-tabs button.is-active { background: var(--panel); color: var(--brand-deep); box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12); }
+.cp-checkout .plan-tab-mark { display: block; font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.cp-checkout .plan-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 4px; }
+.cp-checkout .plan-table th, .cp-checkout .plan-table td { padding: 9px 6px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cp-checkout .plan-table thead th { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.cp-checkout .plan-table td { font-weight: 600; color: var(--brand-deep); }
+.cp-checkout .plan-table td:nth-child(2) { font-weight: 500; color: var(--muted); }
+.cp-checkout .plan-table th:last-child, .cp-checkout .plan-table td:last-child { text-align: right; white-space: nowrap; }
+.cp-checkout .plan-table tfoot th, .cp-checkout .plan-table tfoot td { border-bottom: none; font-weight: 800; color: var(--brand-deep); }
+.cp-checkout .modal p.plan-table-note { font-size: 12.5px; margin: 8px 0 0; }
+.cp-checkout .modal .apply-btn.is-primary { background: var(--brand); color: #fff; }
+.cp-checkout .modal .apply-btn.is-primary:disabled { opacity: .5; }

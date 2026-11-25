@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from 'react-router'
 import { api, ApiError } from '../api'
 import type { Billing, CartLine, Student, VerifiedCart } from '../api'
 import { Avatar } from '../components/Avatar'
-import { CartLines, PlanSchedule, SummaryLines } from '../components/CartLines'
-import { chosenPlan, dueNow, isInstalment } from '../lib/plans'
+import { CartLines, SummaryLines } from '../components/CartLines'
+import { chosenPlan, dueNow, dueText, isInstalment, isSingle } from '../lib/plans'
 import { EmptyState } from '../components/EmptyState'
 import { LoginPanel } from '../components/LoginPanel'
 import { LoaderScreen, TrashIcon } from '../components/Shell'
@@ -58,7 +58,7 @@ const forServer = (lines: CartLine[]): CartLine[] =>
     // The buyer's picks (size: M) travel with the line; the server stores the cart as it is sent.
     ...(options && Object.keys(options).length > 0 ? { options } : {}),
     // The plan's type only: the server reads the amounts from its own catalogue.
-    ...(plans && plans.length > 0 ? { plan: plans.find((p) => p.type === plan)?.type ?? plans[0].type } : {}),
+    ...(plans && plans.length > 0 ? { plan: (plans.find((p) => p.type === plan) ?? plans.find((p) => p.type === 'FULL') ?? plans[0]).type } : {}),
   }))
 
 /**
@@ -106,6 +106,8 @@ export function CartPage() {
   const [cart, setCart] = useState<CartLine[]>([])
   const [verified, setVerified] = useState<VerifiedCart | null>(null)
   const [removing, setRemoving] = useState<CartLine | null>(null)
+  // The payment plan popup: which item it is for, and which plan's tab is showing.
+  const [planView, setPlanView] = useState<{ itemId: string; tab: string } | null>(null)
   const [billing, setBilling] = useState<Billing>(NO_BILLING)
   const [code, setCode] = useState('')
   const [emailTouched, setEmailTouched] = useState(false)
@@ -288,6 +290,8 @@ export function CartPage() {
   const localSubtotal = cart.reduce((sum, l) => sum + l.unitPrice * l.number, 0)
   const localDueNow = cart.reduce((sum, l) => sum + dueNow(l) * l.number, 0)
   const onInstalments = lines.some(isInstalment)
+  const planLine = planView ? lines.find((l) => l.itemId === planView.itemId && (l.plans ?? []).length > 0) : undefined
+  const planTab = planLine?.plans!.find((p) => p.type === planView!.tab) ?? (planLine ? chosenPlan(planLine) : undefined)
   // Checked against the pattern once the student leaves the field, and again on Pay.
   // State and City come from the bundled pincode table; a saved value the table does not know shows as unselected.
   const cities = places ? districtsOf(places, billing.state) : []
@@ -615,7 +619,22 @@ export function CartPage() {
                   +
                 </button>
               </span>
-            ) : null
+            ) : (line.plans ?? []).length > 0 ? (
+              // Courses and test series show their payment plan where the count would be; a click opens its details.
+              <button
+                type="button"
+                className="plan-chip"
+                aria-haspopup="dialog"
+                aria-label={`${t.plan.title}: ${chosenPlan(line)!.label}. ${t.plan.viewDetails}`}
+                onClick={() => setPlanView({ itemId: line.itemId, tab: chosenPlan(line)!.type })}
+                disabled={busy}
+              >
+                {chosenPlan(line)!.label}
+                <span aria-hidden="true">›</span>
+              </button>
+            ) : isSingle(line) ? null : (
+              <span className="product-size">x {line.number}</span>
+            )
           }
           options={(line) =>
             (line.choices ?? []).map((choice) => (
@@ -634,30 +653,7 @@ export function CartPage() {
                   </button>
                 ))}
               </span>
-            )).concat(
-              (line.plans ?? []).length > 0
-                ? [
-                    <span className="plan-picker" key="payment-plan">
-                      <span className="option-picker" role="group" aria-label={`${t.plan.title}: ${line.title}`}>
-                        <span className="option-name">{t.plan.title}</span>
-                        {line.plans!.map((plan) => (
-                          <button
-                            type="button"
-                            key={plan.type}
-                            className={chosenPlan(line)?.type === plan.type ? 'is-picked' : ''}
-                            aria-pressed={chosenPlan(line)?.type === plan.type}
-                            onClick={() => choosePlan(line.itemId, plan.type)}
-                            disabled={busy}
-                          >
-                            {plan.label}
-                          </button>
-                        ))}
-                      </span>
-                      {isInstalment(line) && <PlanSchedule plan={chosenPlan(line)!} commencement={line.commencement} count={line.number} />}
-                    </span>,
-                  ]
-                : [],
-            )
+            ))
           }
         />
 
@@ -749,6 +745,85 @@ export function CartPage() {
           )}
         </div>
       </section>
+
+      {planLine && planTab && (
+        <div className="modal-backdrop" onClick={() => setPlanView(null)}>
+          <div
+            className="modal plan-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="plan-title"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.key === 'Escape' && setPlanView(null)}
+          >
+            <h2 id="plan-title">{t.plan.title}</h2>
+            <p>{planLine.title}</p>
+            <div className="plan-tabs" role="tablist">
+              {planLine.plans!.map((plan, i) => (
+                <button
+                  type="button"
+                  role="tab"
+                  key={plan.type}
+                  id={`plan-tab-${plan.type}`}
+                  aria-selected={plan.type === planTab.type}
+                  aria-controls="plan-panel"
+                  className={plan.type === planTab.type ? 'is-active' : ''}
+                  onClick={() => setPlanView({ itemId: planLine.itemId, tab: plan.type })}
+                  autoFocus={i === 0}
+                >
+                  {plan.label}
+                  {chosenPlan(planLine)?.type === plan.type && <span className="plan-tab-mark">{t.plan.selected}</span>}
+                </button>
+              ))}
+            </div>
+            <div id="plan-panel" role="tabpanel" aria-labelledby={`plan-tab-${planTab.type}`}>
+              <table className="plan-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{t.plan.colPayment}</th>
+                    <th scope="col">{t.plan.colWhen}</th>
+                    <th scope="col">{t.plan.colAmount}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {planTab.installments.map((inst, i) => (
+                    <tr key={i}>
+                      <td>{inst.label}</td>
+                      <td>{dueText(inst, planLine.commencement)}</td>
+                      <td>{formatINR(inst.amount * planLine.number)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th scope="row" colSpan={2}>
+                      {t.cart.total}
+                    </th>
+                    <td>{formatINR(planTab.installments.reduce((sum, i) => sum + i.amount, 0) * planLine.number)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+              <p className="plan-table-note">{planTab.type === 'FULL' ? t.plan.fullNote : t.plan.instalmentNote}</p>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="apply-btn" onClick={() => setPlanView(null)}>
+                {t.plan.close}
+              </button>
+              <button
+                type="button"
+                className="apply-btn is-primary"
+                disabled={chosenPlan(planLine)?.type === planTab.type}
+                onClick={() => {
+                  choosePlan(planLine.itemId, planTab.type)
+                  setPlanView(null)
+                }}
+              >
+                {chosenPlan(planLine)?.type === planTab.type ? t.plan.selected : t.plan.choose(planTab.label)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {removing && (
         <div className="modal-backdrop" onClick={() => setRemoving(null)}>

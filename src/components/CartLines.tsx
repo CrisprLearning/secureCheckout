@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { CartLine, PaymentPlan, Summary } from '../api'
 import { optionLabel } from '../lib/cart'
 import { formatINR } from '../lib/format'
-import { chosenPlan, dueText, isInstalment } from '../lib/plans'
+import { chosenPlan, dueText, isInstalment, isSingle } from '../lib/plans'
 import { t } from '../strings'
 
 const DEFAULT_COURSE_PIC = 'https://img.icons8.com/color/96/book.png'
@@ -27,7 +27,7 @@ export function PlanSchedule({ plan, commencement, count }: { plan: PaymentPlan;
   )
 }
 
-/** The item rows of the order summary. `action` adds a control at the row's edge, `extra` one under its title; `quantity` replaces the "x 1" count when it returns something. */
+/** The item rows of the order summary. `action` adds a control at the row's edge, `extra` one under its title; `quantity` draws the count; without it books and merchandise show "x 2" and courses and test series show nothing. */
 export function CartLines({
   lines,
   action,
@@ -51,7 +51,7 @@ export function CartLines({
             <img src={lineImage(line)} alt="" width="52" height="52" />
             <div className="product-details">
               <span className="product-name">{line.title}</span>
-              {quantity?.(line) ?? <span className="product-size">x {line.number}</span>}
+              {quantity ? quantity(line) : !isSingle(line) && <span className="product-size">x {line.number}</span>}
               {options
                 ? options(line)
                 : Object.entries(line.options ?? {}).map(([name, value]) => (
