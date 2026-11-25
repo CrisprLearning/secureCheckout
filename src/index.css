@@ -725,3 +725,17 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout a.track-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; text-decoration: none; }
 .cp-checkout .track-btn span { font-size: 15px; line-height: 1; transition: transform .15s; }
 .cp-checkout .track-btn:hover span { transform: translateX(3px); }
+
+/* The tick beside the terms: Pay stays off until it is ticked */
+.cp-checkout .terms-check { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+.cp-checkout .terms-check input { flex: none; width: 18px; height: 18px; margin: 1px 0 0; padding: 0; accent-color: var(--brand); cursor: pointer; }
+@media (max-width: 768px) {
+  .cp-checkout .terms-check input { width: 20px; height: 20px; }
+}
+
+/* The terms tick: in the form card on wide screens, under the Total in the order summary on phones */
+.cp-checkout .terms-in-summary { display: none; }
+@media (max-width: 768px) {
+  .cp-checkout .terms-in-form { display: none; }
+  .cp-checkout .terms-in-summary { display: block; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+}

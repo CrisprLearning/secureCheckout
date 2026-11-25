@@ -125,6 +125,7 @@ export const t = {
     hintLogin: 'Please verify your mobile number to proceed.',
     hintOption: (option: string, title: string) => `Please choose a ${option} for ${title} to proceed.`,
     hintBilling: 'Please add your billing address to proceed.',
+    hintAgree: 'Please tick the box to agree to the terms and proceed.',
     verifying: 'Confirming your payment',
     cancelledReason: 'the payment was cancelled before it was completed',
     notInitiated: 'Something went wrong, payment was not initiated',

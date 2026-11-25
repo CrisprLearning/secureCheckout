@@ -50,6 +50,7 @@ function billingFor(student: Student): Billing {
 }
 
 const FIRST_STATE = 'Kerala'
+const AGREED_KEY = 'crispr-terms-agreed'
 
 /** The fields the server expects for a cart line, and nothing else. */
 const forServer = (lines: CartLine[]): CartLine[] =>
@@ -110,6 +111,23 @@ export function CartPage() {
   const [cart, setCart] = useState<CartLine[]>([])
   const [verified, setVerified] = useState<VerifiedCart | null>(null)
   const [removing, setRemoving] = useState<CartLine | null>(null)
+  // The tick beside the terms. Kept for the tab, so "Retry Payment" does not ask for it again.
+  const [agreed, setAgreed] = useState(() => {
+    try {
+      return sessionStorage.getItem(AGREED_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  function agree(yes: boolean) {
+    setAgreed(yes)
+    try {
+      if (yes) sessionStorage.setItem(AGREED_KEY, '1')
+      else sessionStorage.removeItem(AGREED_KEY)
+    } catch {
+      // Storage blocked: the tick lasts for this page view.
+    }
+  }
   // Courses and test series in the cart that this candidate has already bought.
   const [owned, setOwned] = useState<CartLine[]>([])
   // The payment plan popup: which item it is for, and which plan's tab is showing.
@@ -297,6 +315,28 @@ export function CartPage() {
     void revalidate()
   }
 
+  // Pay stays off until this is ticked. The links open in a new tab and do not tick it.
+  const termsCheck = (
+    <label className="terms-check">
+      <input type="checkbox" checked={agreed} onChange={(e) => agree(e.target.checked)} />
+      <span>
+      {t.terms.before}
+      <a href={TERMS_URL} target="_blank" rel="noopener noreferrer">
+        {t.terms.terms}
+      </a>
+      {t.terms.and}
+      <a href={REFUND_POLICY_URL} target="_blank" rel="noopener noreferrer">
+        {t.terms.refund}
+      </a>
+      {t.terms.understand}
+      <a href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer">
+        {t.terms.privacy}
+      </a>
+      .
+      </span>
+    </label>
+  )
+
   const summary = verified?.summary
   const lines = verified?.cart ?? cart
   const busy = phase !== 'idle'
@@ -304,7 +344,7 @@ export function CartPage() {
   const pricing = !!student && !verified && !priceFailed
   const billingDone = BILLING_FIELDS.every((f) => billing[f].trim() !== '')
   const unchosen = missingOption(lines)
-  const canPay = !!student && !!summary && summary.totalPayable > 0 && billingDone && !unchosen && owned.length === 0 && !busy
+  const canPay = !!student && !!summary && summary.totalPayable > 0 && billingDone && !unchosen && owned.length === 0 && agreed && !busy
   const localDueNow = cart.reduce((sum, l) => sum + dueNow(l) * l.number, 0)
   const onInstalments = lines.some(isInstalment)
   const planLine = planView ? lines.find((l) => rowId(l) === planView.lineId && (l.plans ?? []).length > 0) : undefined
@@ -567,23 +607,8 @@ export function CartPage() {
           </div>
         )}
 
-        <section className="payment-section">
-          <p>
-            {t.terms.before}
-            <a href={TERMS_URL} target="_blank" rel="noopener noreferrer">
-              {t.terms.terms}
-            </a>
-            {t.terms.and}
-            <a href={REFUND_POLICY_URL} target="_blank" rel="noopener noreferrer">
-              {t.terms.refund}
-            </a>
-            {t.terms.understand}
-            <a href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer">
-              {t.terms.privacy}
-            </a>
-            .
-          </p>
-        </section>
+        {/* On phones the same tick sits in the order summary, under the Total. */}
+        <section className="payment-section terms-in-form">{termsCheck}</section>
       </section>
       {/* Help line: under the form box on desktop, under every box on phones (see .help-line in index.css). */}
       <p className="help-line">
@@ -750,6 +775,8 @@ export function CartPage() {
           </div>
         )}
 
+        <div className="terms-in-summary">{termsCheck}</div>
+
         {cart.some(isDelivered) && (
           <p className="delivery-note" role="note">
             {cart.some((l) => l.isMerch) ? t.cart.itemDelivery : t.cart.bookDelivery}
@@ -767,7 +794,15 @@ export function CartPage() {
           </button>
           {!canPay && !busy && !pricing && (
             <p id="pay-hint" className="pay-hint">
-              {!student ? t.pay.hintLogin : unchosen ? t.pay.hintOption(optionLabel(unchosen.name).toLowerCase(), unchosen.line.title) : t.pay.hintBilling}
+              {!student
+                ? t.pay.hintLogin
+                : unchosen
+                  ? t.pay.hintOption(optionLabel(unchosen.name).toLowerCase(), unchosen.line.title)
+                  : !billingDone
+                    ? t.pay.hintBilling
+                    : !agreed
+                      ? t.pay.hintAgree
+                      : t.pay.hintBilling}
             </p>
           )}
         </div>
