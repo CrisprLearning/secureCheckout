@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { api } from '../api'
 import type { Student } from '../api'
-import { HELP_URL, OTP_LENGTH, OTP_RESEND_SECONDS } from '../config'
+import { OTP_LENGTH, OTP_RESEND_SECONDS, SUPPORT_EMAIL } from '../config'
 import { track } from '../lib/analytics'
 import { digits, errorMessage, isMobile, maskMobile } from '../lib/format'
 import { t } from '../strings'
 import { useToast } from './Toast'
 
-// Mobile number, then one-time passcode boxes: the portal's "Login / Register" block (FR-L1, FR-L2).
+// Mobile number, then one-time passcode boxes: the portal's "Login / Register" block.
+// A number that is not registered yet is registered by the same two steps.
 export function LoginPanel({ title = t.login.title, onDone }: { title?: string; onDone: (s: Student) => void }) {
   const toast = useToast()
   const [stage, setStage] = useState<'mobile' | 'otp'>('mobile')
@@ -38,7 +39,7 @@ export function LoginPanel({ title = t.login.title, onDone }: { title?: string; 
       setOtp(Array<string>(OTP_LENGTH).fill(''))
       setStage('otp')
       setWait(OTP_RESEND_SECONDS)
-      toast(t.login.otpSent)
+      toast(res.message ?? t.login.otpSent)
       setTimeout(() => otpRefs.current[0]?.focus(), 0)
     } catch (err) {
       toast(errorMessage(err))
@@ -177,7 +178,7 @@ export function LoginPanel({ title = t.login.title, onDone }: { title?: string; 
           {t.login.changeNumber}
         </button>
         {resends >= 2 && (
-          <a href={HELP_URL} target="_blank" rel="noopener noreferrer">
+          <a href={`mailto:${SUPPORT_EMAIL}`}>
             {t.login.notReceived}
           </a>
         )}

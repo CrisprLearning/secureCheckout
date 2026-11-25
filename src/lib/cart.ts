@@ -1,12 +1,11 @@
 // Shopping cart kept in localStorage, the same way the candidate portal's checkout keeps it.
-// It can hold several items. Courses and test series are limited to one each; books add to their count.
-// Prices stored here are only for display before login: the server recomputes everything.
+// It can hold several items. Courses and test series are limited to one each; any other type adds to its count.
+// The server checks every stored price against its catalogue before it prices or charges anything.
 
-import type { CartLine, CatalogItem, VerifiedLine } from '../api/types'
+import type { CartLine, CatalogItem } from '../api/types'
 
 const CART_KEY = 'crisprCart'
 const CODE_KEY = 'crisprCartDiscountCode'
-const MAX_COUNT = 20
 
 function read(key: string): string {
   try {
@@ -37,28 +36,15 @@ export function saveCart(lines: CartLine[]) {
   write(CART_KEY, JSON.stringify(lines))
 }
 
-/** Keeps the stored cart in step with what the server verified (prices, dropped items). */
-export function syncCart(lines: VerifiedLine[]) {
-  saveCart(lines.map(({ itemId, title, type, unitPrice, number, displayImage }) => ({ itemId, title, type, unitPrice, number, displayImage })))
-}
-
 export function addToCart(item: CatalogItem): CartLine[] {
   forgetCouponCode()
   const cart = retrieveCart()
   const found = cart.find((line) => line.itemId === item.code)
   if (found) {
-    if (found.type === 'Book') found.number = Math.min(MAX_COUNT, found.number + 1)
+    if (found.type !== 'Course' && found.type !== 'Test Series') found.number += 1
   } else {
     cart.push({ itemId: item.code, title: item.title, type: item.type, unitPrice: item.sellingPrice, number: 1, displayImage: item.photo })
   }
-  saveCart(cart)
-  return cart
-}
-
-export function setCount(itemId: string, number: number): CartLine[] {
-  const cart = retrieveCart()
-  const found = cart.find((line) => line.itemId === itemId)
-  if (found && found.type === 'Book') found.number = Math.max(1, Math.min(MAX_COUNT, number))
   saveCart(cart)
   return cart
 }

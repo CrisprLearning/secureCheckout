@@ -7,15 +7,16 @@ export const MAIN_SITE_URL = 'https://crisprlearning.com'
 export const TERMS_URL = `${MAIN_SITE_URL}/terms-and-conditions/`
 export const REFUND_POLICY_URL = `${MAIN_SITE_URL}/refund-policy/`
 export const PRIVACY_POLICY_URL = `${MAIN_SITE_URL}/privacy-policy/`
-export const PORTAL_URL = env.VITE_PORTAL_URL ?? 'https://candidate.crisprlearning.com'
+export const PORTAL_URL: string = (env.VITE_PORTAL_URL || 'https://candidate.crisprlearning.com').replace(/\/+$/, '')
 
-/** Base URL of the checkout backend. When unset the app runs against the in-browser demo backend. */
-export const API_BASE_URL: string | undefined = env.VITE_API_BASE_URL || undefined
-export const IS_DEMO = !API_BASE_URL
+/** The Crispr candidate APIs. Production is the default, as in the candidate portal. */
+export const API_BASE_URL: string = (env.VITE_API_BASE || 'https://crisprtech.app/crispr-apis').replace(/\/+$/, '')
 
-/** WhatsApp help number in international format without "+", for example 919876543210. */
-const whatsappNumber: string | undefined = env.VITE_WHATSAPP_NUMBER || undefined
-export const HELP_URL = whatsappNumber ? `https://wa.me/${whatsappNumber}` : `${MAIN_SITE_URL}/contact/`
+/**
+ * Set VITE_SHARED_LOGIN_COOKIE=true to keep the login cookie on the whole domain, so the portal sees it too.
+ * See src/lib/auth.ts before turning it on.
+ */
+export const SHARED_LOGIN_DOMAIN: string | null = env.VITE_SHARED_LOGIN_COOKIE === 'true' ? '.crisprlearning.com' : null
 
 export const SUPPORT_PHONE = '9809677798'
 export const SUPPORT_EMAIL = 'support@crisprlearning.com'

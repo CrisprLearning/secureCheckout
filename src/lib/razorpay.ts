@@ -1,7 +1,7 @@
 // Opens Razorpay Checkout. Only the public key ID and the Razorpay order ID are used here;
-// the result is always verified by the server before anything is shown as paid (FR-P3, SEC-3).
+// the result is always verified by the server before anything is shown as paid.
 
-import type { RazorpayOrder } from '../api/types'
+import type { PaymentOrder } from '../api/types'
 import { t } from '../strings'
 
 export type PaymentResult =
@@ -46,7 +46,7 @@ function loadScript(): Promise<void> {
 }
 
 export async function openRazorpay(
-  rzp: RazorpayOrder,
+  order: PaymentOrder,
   info: { description: string; name?: string; mobile: string; email?: string },
 ): Promise<PaymentResult> {
   await loadScript()
@@ -54,10 +54,11 @@ export async function openRazorpay(
     let lastFailure: string | undefined
     let failed = false
     const checkout = new window.Razorpay!({
-      key: rzp.keyId,
-      order_id: rzp.orderId,
-      amount: rzp.amount,
-      currency: rzp.currency,
+      key: order.key,
+      order_id: order.order,
+      amount: order.amount,
+      currency: 'INR',
+      notes: { 'Crispr Order #': order.transactionId },
       name: t.brand,
       description: info.description,
       prefill: { name: info.name, contact: `+91${info.mobile}`, email: info.email },

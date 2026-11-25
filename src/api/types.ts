@@ -1,11 +1,10 @@
-// Shapes exchanged with the checkout backend. Money is always in paise.
-// Names follow the candidate portal's checkout (cart lines, verified cart, summary, billing address).
+// Shapes exchanged with the Crispr candidate APIs (the same PHP endpoints the candidate portal's checkout uses).
+// Money is always in paise.
 
-export type ItemType = 'Course' | 'Test Series' | 'Book'
-export type OrderStatus = 'CREATED' | 'PAID' | 'FULFILLED' | 'FAILED' | 'EXPIRED' | 'REFUNDED'
-export type ShipmentStatus = 'placed' | 'packed' | 'shipped' | 'delivered'
+/** 'Course' or 'Test Series' today; kept open so a new catalogue type does not break the cart. */
+export type ItemType = string
 
-/** A catalogue entry, as returned by a lookup. */
+/** A catalogue entry, as returned by public/courses.php. */
 export interface CatalogItem {
   code: string
   type: ItemType
@@ -14,7 +13,10 @@ export interface CatalogItem {
   photo?: string
 }
 
-/** One line of the cart kept in the browser. Prices here are for display only; the server recomputes them. */
+/**
+ * One line of the cart. It is kept in the browser and sent to the server as is; the server rejects the
+ * whole cart if a unit price does not match its catalogue, so a stored price can never lower the charge.
+ */
 export interface CartLine {
   itemId: string
   title: string
@@ -22,14 +24,6 @@ export interface CartLine {
   unitPrice: number
   number: number
   displayImage?: string
-}
-
-/** A cart line after the server has checked it for the logged-in student. */
-export interface VerifiedLine extends CartLine {
-  /** The ID the Portal uses for this course or exam bundle. */
-  portalRef: string
-  /** True when the student already owns the item; it is then left out of the total. */
-  owned?: boolean
 }
 
 export interface Summary {
@@ -41,7 +35,7 @@ export interface Summary {
 }
 
 export interface VerifiedCart {
-  cart: VerifiedLine[]
+  cart: CartLine[]
   summary: Summary
 }
 
@@ -55,106 +49,40 @@ export interface Billing {
   email: string
 }
 
+/** The logged-in candidate, as far as checkout needs to know them. */
 export interface Student {
-  id: string
   mobile: string
-  name?: string
-  billing?: Partial<Billing>
+  name: string
+  /** Address from their last purchase, used to pre-fill the billing form. */
+  billing: Partial<Billing>
 }
 
-export interface Shipment {
-  status: ShipmentStatus
-  courier?: string
-  trackingNumber?: string
-}
-
-export interface Order {
-  id: string
-  orderNumber: string
-  items: VerifiedLine[]
-  summary: Summary
-  billing: Billing
-  status: OrderStatus
-  paymentRef?: string
-  createdAt: string
-  paidAt?: string
-  /** Present when the order contains books. */
-  shipment?: Shipment
-}
-
-export interface RazorpayOrder {
-  /** Public key ID only. The key secret never leaves the server. */
-  keyId: string
-  orderId: string
+/** What process-purchase.php returns: everything Razorpay Checkout needs to open. */
+export interface PaymentOrder {
+  /** Razorpay public key ID. */
+  key: string
+  /** Razorpay order ID. */
+  order: string
   amount: number
-  currency: 'INR'
+  /** Crispr's own order number. */
+  transactionId: string
 }
 
 export interface PaymentProof {
-  orderId: string
   razorpayOrderId: string
   razorpayPaymentId: string
   razorpaySignature: string
 }
 
-export interface Utm {
-  utm_source?: string
-  utm_medium?: string
-  utm_campaign?: string
-  referrer?: string
-}
-
-/** What the browser sends for a cart: IDs and counts only, never prices (SEC-2). */
-export type CartRequest = { itemId: string; number: number }[]
-
-export interface PurchaseRequest {
-  cart: CartRequest
-  discountCode: string
-  billing: Billing
-  /** Only used to detect a price change since the cart was shown. */
-  expectedTotal: number
-  utm?: Utm
-}
-
-export type ApiErrorCode =
-  | 'network'
-  | 'unauthenticated'
-  | 'not_found'
-  | 'item_unavailable'
-  | 'already_owned'
-  | 'price_changed'
-  | 'pin_unserviceable'
-  | 'otp_invalid'
-  | 'otp_expired'
-  | 'otp_locked'
-  | 'rate_limited'
-  | 'generic'
+export type ApiErrorCode = 'network' | 'unauthenticated' | 'item_unavailable' | 'server'
 
 export class ApiError extends Error {
   code: ApiErrorCode
+  /** True when `message` is the server's own wording and can be shown to the student. */
+  fromServer: boolean
   constructor(code: ApiErrorCode, message?: string) {
     super(message ?? code)
     this.code = code
+    this.fromServer = message !== undefined
   }
-}
-
-export interface Api {
-  getSession(): Promise<Student | null>
-  /** Sends the OTP and returns a key that must accompany the verification. */
-  requestOtp(mobile: string): Promise<{ key: string }>
-  verifyOtp(mobile: string, otp: string, key: string): Promise<Student>
-  logout(): Promise<void>
-
-  /** Throws item_unavailable for unknown, inactive or not-yet-on-sale items (UR-4). */
-  lookupItem(code: string): Promise<CatalogItem>
-  /** Prices, ownership, discount, taxes and total for the logged-in student. Unknown lines are dropped. */
-  validateCart(cart: CartRequest, discountCode: string): Promise<VerifiedCart>
-
-  createOrder(req: PurchaseRequest): Promise<{ order: Order; razorpay: RazorpayOrder }>
-  verifyPayment(proof: PaymentProof): Promise<Order>
-  getOrder(id: string): Promise<Order>
-  listOrders(): Promise<Order[]>
-
-  /** Issues a single-use, 60-second key for a Portal redirect (section 7). */
-  createHandoff(): Promise<{ key: string }>
 }

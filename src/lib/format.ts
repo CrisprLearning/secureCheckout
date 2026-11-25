@@ -17,9 +17,9 @@ export function formatDate(iso: string): string {
   return new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso))
 }
 
-/** Plain-language message for any thrown value (UX-6). */
+/** What to tell the student about a thrown value: the server's own wording when it gave one. */
 export function errorMessage(err: unknown): string {
-  if (err instanceof ApiError) return t.errors[err.code] ?? t.errors.generic
+  if (err instanceof ApiError) return err.fromServer ? err.message : (t.errors[err.code] ?? t.errors.generic)
   return t.errors.generic
 }
 

@@ -1,11 +1,12 @@
 # secureCheckout
 
-Checkout frontend for Crispr Learning, served at `securecheckout.crisprlearning.com` (GitHub Pages).
-It takes a student from a Buy button on the main site through cart, OTP login, Razorpay payment and
-confirmation, then hands off to the candidate portal.
+Checkout for Crispr Learning, served at `securecheckout.crisprlearning.com` (GitHub Pages).
+It takes a student from a Buy button on the main site through cart, OTP login, billing address, Razorpay
+payment and a result screen, then sends them to the candidate portal.
 
-React 19 + TypeScript + Vite. Static site: every rule that matters (prices, OTP, payment signatures,
-sessions, entitlements) belongs to the backend it talks to.
+React 19 + TypeScript + Vite. It is a static site that talks to the **live Crispr candidate APIs**, the same
+PHP endpoints the candidate portal's own checkout (`candidate.crisprlearning.com/checkout`) uses. Prices,
+discounts, taxes, payment signatures and enrolment are all decided by those APIs.
 
 ## Run
 
@@ -14,68 +15,68 @@ npm install
 npm run dev
 ```
 
-Open `/cart?addItem=TS0001`. With no backend configured the app uses an in-browser **demo backend**
-(`src/api/mock.ts`): OTP is `1234`, gift code is `CRISPR10`, payment is simulated, data lives in `localStorage`.
-Demo items: `CR0001` course, `TS0001` and `PY0001` test series, `BK0001` book. PIN code `999999` is
-treated as not deliverable for books.
-
-## Cart
-
-The cart holds several items and lives in `localStorage` (`src/lib/cart.ts`), as in the candidate portal.
-Each `/cart?addItem=` link adds to it. Courses and test series are limited to one each; books add to their
-count. Before login the cart shows stored prices; after login the server prices it (ownership, discount,
-taxes, delivery, total) and only IDs and counts are ever sent from the browser.
-
-## Look
-
-The UI mirrors the candidate portal's checkout page (`candidatePortal/src/pages/CheckoutPage.jsx` and
-`styles/pages/checkout.css`): same tokens, font, layout and class names. `src/index.css` is that stylesheet
-plus a clearly marked block of additions.
+Open `/cart?addItem=CR0011` (any active catalogue code). There is no demo mode: logging in sends a real SMS
+passcode, and Pay Now opens a real Razorpay payment.
 
 ## Configuration
 
-Public build-time variables (see `.env.example`). For deploys, set them as repository **Variables**.
+Public build-time variables (see `.env.example`); all optional. For deploys, set them as repository **Variables**.
 
-| Variable | Purpose |
-| --- | --- |
-| `VITE_API_BASE_URL` | Checkout backend origin. Empty means demo mode, with a banner. |
-| `VITE_PORTAL_URL` | Candidate portal origin. |
-| `VITE_WHATSAPP_NUMBER` | Help link number, international format without `+`. |
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `VITE_API_BASE` | `https://crisprtech.app/crispr-apis` | The candidate APIs. |
+| `VITE_PORTAL_URL` | `https://candidate.crisprlearning.com` | Where students go after paying. |
+| `VITE_SHARED_LOGIN_COOKIE` | off | `true` keeps the login cookie on `.crisprlearning.com` so the portal is already logged in. See below. |
 
 ## Routes
 
 | Path | Screen |
 | --- | --- |
-| `/cart?addItem={itemId}&type={itemType}` | Cart, login, billing address, gift code, payment |
-| `/order/{id}` | Confirmation and receipt; polls while payment is being confirmed |
-| `/orders` | The student's order history |
+| `/cart?addItem={code}` | Cart, login, billing address, gift code, payment |
+| `/payment` | Result of the last payment: success, failed (with Retry Payment) or paid-but-not-confirmed |
 
-## Backend contract
+## Flow and API calls
 
-`src/api/types.ts` defines the `Api` interface and `src/api/http.ts` maps it to HTTP. The session is an
-HttpOnly cookie (`credentials: 'include'`), so the backend must allow this origin with credentials.
-Errors are JSON `{ "code": "..." }` using the codes in `ApiErrorCode`.
+`src/api/index.ts` is the only file that talks to the server.
 
-| Call | Request |
+| Step | Call |
 | --- | --- |
-| Session | `GET /api/session` |
-| OTP | `POST /api/auth/otp/request` (returns a key), `POST /api/auth/otp/verify`, `POST /api/auth/logout` |
-| Catalogue | `GET /api/items/{id}` |
-| Cart | `POST /api/cart/validate` with `{ cart: [{ itemId, number }], discountCode }` |
-| Orders | `POST /api/orders`, `GET /api/orders`, `GET /api/orders/{id}` |
-| Payment | `POST /api/payments/verify` (plus the Razorpay webhook, server side only) |
-| Handoff | `POST /api/handoff` returns a single-use key for the portal redirect |
+| Add an item from the link | `POST public/courses.php?code=` |
+| Send the passcode | `POST user/authenticate.php` `{ username }` → OTP key |
+| Verify it | `POST user/login.php` `{ username, passcode, key }` → session token |
+| Who is logged in, last billing address | `GET user/get-billing-address.php` |
+| Price the cart | `POST user/checkout/validate-user-cart.php` `{ cart, code }` |
+| Create the order | `POST user/checkout/process-purchase.php` `{ cart, discountCode, billingAddress }` → Razorpay key, order, amount |
+| Confirm the payment | `POST user/checkout/acknowledge-purchase.php` → signature check and enrolment |
 
-The candidate portal already talks to a PHP API for the same steps (`authenticate`, `login`, `courses`,
-`validate-user-cart`, `process-purchase`, `acknowledge-purchase`). `src/api/http.ts` is not wired to it yet.
+Notes on behaviour:
+
+- **Cart.** Kept in `localStorage` (`src/lib/cart.ts`) in the portal's format; it can hold several items, one each
+  of a course or test series. The server rejects a cart whose stored prices differ from its catalogue; the app
+  then refreshes the lines from the catalogue and prices it once more.
+- **Session.** The token from `login.php` is kept in the `crispriteUserToken` cookie for 7 days and sent as a
+  Bearer token. The APIs report a bad token in the response body (HTTP 200), which logs the student out here.
+- **Payment result.** There is no "get my order" API, so the result screen is built from what the browser knows
+  and kept in `sessionStorage` for the tab. A payment Razorpay reports as successful but the server does not
+  confirm is shown as "could not confirm", never as a failure with a retry.
+
+## Logging in to the portal after payment
+
+By default the login cookie belongs to this site only, so the portal asks the student to log in again.
+`VITE_SHARED_LOGIN_COOKIE=true` sets the cookie for `.crisprlearning.com` instead, and the portal picks it up.
+Before turning it on, change the portal's `clearToken()` to also clear the cookie with
+`domain=.crisprlearning.com`; otherwise logging out of the portal leaves this cookie behind.
 
 ## Layout
 
 - `src/strings.ts`: all interface text, in one place for translation.
 - `src/config.ts`: URLs and environment settings.
-- `src/api/`: types, HTTP client, demo backend.
+- `src/api/`: API client and types.
 - `src/pages/`, `src/components/`: screens and their parts.
-- `src/lib/`: cart storage, formatting, analytics events (pushed to `window.dataLayer`), Razorpay loader.
+- `src/lib/`: cart and token storage, payment result, formatting and validation, analytics events
+  (pushed to `window.dataLayer`), Razorpay loader, pincode lookup.
+
+The UI mirrors the candidate portal's checkout page; `src/index.css` starts from its stylesheet.
 
 ## Pincode data
 
@@ -89,10 +90,7 @@ It is built from India Post's All India Pincode Directory (data.gov.in, Governme
 python3 scripts/build-pincodes.py /path/to/pincode.csv
 ```
 
-A pincode served from several districts is assigned to the one with the most post offices. Re-run the script
-with a newer CSV to pick up new pincodes and districts.
-
 ## Deploy
 
 Pushing to `main` runs `.github/workflows/deploy.yml`. `public/CNAME` and `public/.nojekyll` are copied
-into the build, and the build writes `cart.html`, `orders.html` and `404.html` so app URLs load directly.
+into the build, and the build writes `cart.html`, `payment.html` and `404.html` so app URLs load directly.

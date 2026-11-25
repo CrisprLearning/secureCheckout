@@ -224,10 +224,6 @@ body { margin: 0; background: var(--bg); }
 /* ── Additions for this app (not in the portal's checkout) ─────────────── */
 
 .cp-checkout .header a { display: block; }
-.cp-checkout .demo-banner {
-  max-width: 1080px; margin: 0 auto; padding: 8px 14px; border-radius: 999px;
-  background: var(--brand-deep); color: #fff; font-size: 12.5px; font-weight: 600; text-align: center;
-}
 .cp-checkout .container.is-loading { position: relative; min-height: 260px; }
 .cp-checkout .form-section.solo { flex: none; width: 100%; max-width: 560px; margin: 0 auto; }
 .cp-checkout .form-section.solo .loginSection { margin-bottom: 0; }
@@ -258,13 +254,6 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .cartItems.has-action .summary-item:first-child .summary-item-remove { top: 0; }
 .cp-checkout .cartItems:not(.has-action) .summary-item .price { margin-right: 0; }
 .cp-checkout .cartItems .price { padding-top: 6px; }
-.cp-checkout .price.is-struck { text-decoration: line-through; color: var(--muted) !important; font-weight: 600 !important; }
-.cp-checkout .qty { display: inline-flex; gap: 6px; margin-top: 6px; }
-.cp-checkout .qty button {
-  width: 28px; height: 28px; border: none; border-radius: 50%; display: grid; place-items: center;
-  background: var(--panel-soft); color: var(--brand); font-size: 16px; font-weight: 800; line-height: 1;
-}
-.cp-checkout .qty button:disabled { color: #a3b1c2; }
 .cp-checkout .portal-btn { margin-top: 8px; padding: 8px 14px; font-size: 13px; align-self: flex-start; max-width: none; }
 .cp-checkout .apply-btn { text-decoration: none; text-align: center; }
 .cp-checkout .apply-btn:disabled { opacity: .5; }
@@ -279,8 +268,6 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .order-facts { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
 .cp-checkout .order-facts > div { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
 .cp-checkout .order-facts dd { font-weight: 700; color: var(--ink); text-align: right; overflow-wrap: anywhere; }
-.cp-checkout .order-list { margin: 14px 0 0; }
-.cp-checkout .order-list .summary-item { align-items: center; }
 .cp-checkout .loader.is-dark { margin: 0 auto; border-color: var(--brand-soft); border-top-color: var(--brand); }
 
 /* Toaster and modal */
@@ -304,13 +291,9 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .modal.is-status { align-items: center; text-align: center; }
 .cp-checkout .modal.is-status .loaderScreen { position: static; background: none; }
 
-@media (max-width: 768px) {
-  .cp-checkout .demo-banner { border-radius: var(--radius-sm); }
-}
 
 @media print {
   .cp-checkout { background: #fff; padding: 0; }
-  .cp-checkout .demo-banner, .cp-checkout .no-print, .cp-checkout .portal-btn, .toaster { display: none !important; }
   .cp-checkout .form-section { box-shadow: none; }
 }
 
@@ -336,7 +319,6 @@ body { margin: 0; background: var(--bg); }
   .cp-checkout .form-section.solo { max-width: none; }
   .cp-checkout .header { padding: 12px 16px 16px; }
   .cp-checkout .header img { max-width: 130px; }
-  .cp-checkout .demo-banner { max-width: 640px; }
   /* 16px inputs stop iOS Safari zooming the page when a field is focused. */
   .cp-checkout input, .cp-checkout select { font-size: 16px; }
   /* Tablets have room for the address rows and the gift code row side by side. */
@@ -347,7 +329,6 @@ body { margin: 0; background: var(--bg); }
   .cp-checkout .summary-item-remove { width: 40px; height: 40px; }
   .cp-checkout .cartItems .summary-item .price { margin-right: 48px; }
   .cp-checkout .cartItems:not(.has-action) .summary-item .price { margin-right: 0; }
-  .cp-checkout .qty button { width: 36px; height: 36px; font-size: 18px; }
   .cp-checkout .portal-btn { padding: 10px 16px; }
   .cp-checkout .logoutButton { padding: 10px 0 10px 10px; }
   .cp-checkout .text-btn { padding: 8px 0; }
@@ -369,7 +350,6 @@ body { margin: 0; background: var(--bg); }
   .cp-checkout .product-name { font-size: 14px; overflow-wrap: anywhere; }
   .cp-checkout .total { font-size: 17px; }
   .cp-checkout .order-facts > div { gap: 12px; }
-  .cp-checkout .order-list .summary-item { flex-wrap: wrap; }
   .cp-checkout .empty-cart { font-size: 18px; margin: 32px 0; }
   .cp-checkout .confirm-head .status-mark { width: 52px; height: 52px; font-size: 24px; }
   /* Dialogs rise from the bottom edge, within thumb reach. */
@@ -387,7 +367,6 @@ body { margin: 0; background: var(--bg); }
 /* Phones, continued: rows that were too cramped at 360px. */
 .cp-checkout .portal-btn { white-space: nowrap; }
 .cp-checkout .product-info { align-items: flex-start; }
-.cp-checkout .order-list .product-details { flex: 1; }
 @media (max-width: 480px) {
   /* Logged-in header: name under the title, Logout kept on the title's line. */
   .cp-checkout .loginSection .cp-checkout-user h2 { flex-wrap: nowrap; align-items: flex-start; }
@@ -418,12 +397,10 @@ body { margin: 0; background: var(--bg); }
   padding-left: 10px; border-left: 1.5px solid var(--line);
   font-size: 14px; line-height: 20px; letter-spacing: .05em; white-space: nowrap;
 }
-.cp-checkout .demo-banner { margin-bottom: 12px; }
 @media (max-width: 768px) {
   .cp-checkout .header { max-width: 640px; padding: 0 4px 10px; }
   .cp-checkout .header img { height: 22px; max-width: none; }
   .cp-checkout .header small { font-size: 12.5px; line-height: 18px; }
-  .cp-checkout .demo-banner { margin-bottom: 10px; }
 }
 
 /* Empty cart / item not found / page not found */

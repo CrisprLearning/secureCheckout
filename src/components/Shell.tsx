@@ -1,16 +1,11 @@
 import type { ReactNode } from 'react'
-import { IS_DEMO, MAIN_SITE_URL } from '../config'
+import { MAIN_SITE_URL } from '../config'
 import { t } from '../strings'
 
-// Page frame shared by every screen: centred logo and "Secure checkout", as on the candidate portal.
+// Page frame shared by every screen: the logo with "Secure checkout" beside it.
 export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="cp-checkout">
-      {IS_DEMO && (
-        <p className="demo-banner" role="status">
-          {t.demoBanner}
-        </p>
-      )}
       <header className="header">
         <a href={MAIN_SITE_URL}>
           <img src="/logo/crispr-logo.svg" alt={t.logoAlt} width="150" height="40" />
@@ -22,7 +17,7 @@ export function Shell({ children }: { children: ReactNode }) {
   )
 }
 
-/** A single centred white panel, for confirmation, orders and messages. */
+/** A single centred white panel, for the payment result and messages. */
 export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div className="container">

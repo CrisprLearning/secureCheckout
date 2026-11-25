@@ -1,33 +1,24 @@
-// All interface text lives here so another language (Malayalam) can be added later (UX-7).
-// Wording follows the candidate portal's checkout page.
-
-import type { ItemType, OrderStatus, ShipmentStatus } from './api/types'
+// All interface text lives here so another language (Malayalam) can be added later.
+// Wording follows the candidate portal's checkout page. Messages from the server are shown as it sends them.
 
 export const t = {
   brand: 'Crispr Learning',
   logoAlt: 'Crispr Learning logo',
   secure: 'Secure checkout',
   loading: 'Loading',
-  demoBanner: 'Demo mode: no real login or payment. Use OTP 1234. Gift code CRISPR10.',
 
-  portalButton: {
-    Course: 'Access the Course',
-    'Test Series': 'Take the Exam',
-    Book: 'Track My Order',
-  } satisfies Record<ItemType, string>,
+  /** Label of the portal link for an item type; anything else falls back to `portalDefault`. */
+  portalButton: { Course: 'Access the Course', 'Test Series': 'Take the Exam' } as Record<string, string>,
+  portalDefault: 'Go to the Students Portal',
 
   cart: {
     summaryTitle: 'Order Summary',
     emptyTitle: 'Your cart is empty',
-    emptyBody: 'Pick a course, test series or book on our site and it will show up here, ready for checkout.',
+    emptyBody: 'Pick a course or test series on our site and it will show up here, ready for checkout.',
     invalidTitle: 'Oho! We could not find that item',
     invalidBody: 'The link may be incomplete, or the item is no longer on sale. Head back to our site to pick it again.',
     emptyLink: 'Take Me Home',
-    invalidItem: 'Course selected is invalid or no more available for purchase',
     remove: 'Remove',
-    fewer: 'One fewer',
-    more: 'One more',
-    owned: 'Already purchased',
     subtotal: 'Subtotal',
     discounts: 'Discounts',
     total: 'Total',
@@ -36,8 +27,8 @@ export const t = {
     codePlaceholder: 'Gift card or discount code',
     apply: 'Apply',
     codeInvalid: 'This gift card or discount code is not valid',
-    priceChanged: 'The total has changed. Please check the new amount before paying.',
-    allOwned: 'You already have everything in this cart.',
+    pricesUpdated: 'Prices in your cart were out of date and have been refreshed.',
+    itemsRemoved: 'Some items are no longer on sale and were removed from your cart.',
   },
 
   login: {
@@ -57,17 +48,15 @@ export const t = {
     changeNumber: 'Change number',
     resendIn: (s: number) => `Resend passcode in ${s}s`,
     resend: 'Resend passcode',
-    notReceived: 'Still no passcode? Message us on WhatsApp.',
+    notReceived: 'Still no passcode? Email us.',
     loggedIn: 'Logged in',
     loggedInAs: (name: string) => `as ${name}`,
     logout: 'Logout',
-    loginToView: 'Login to continue',
   },
 
   billing: {
     title: 'Billing Address',
     body: 'We need these details for your invoice.',
-    bodyDelivery: 'We need these details for your invoice and to deliver your books.',
     fullname: 'Full Name',
     address: 'Address',
     locality: 'Locality or Landmark',
@@ -102,70 +91,34 @@ export const t = {
     notInitiated: 'Something went wrong, payment was not initiated',
   },
 
-  order: {
+  result: {
     successTitle: 'Your payment is successful!',
     successBody: 'Thank you. Your order is confirmed.',
-    pendingTitle: 'We are confirming your payment',
-    pendingBody: 'If money was debited, you do not need to pay again. This page updates on its own.',
-    pendingLong: 'This is taking longer than usual. We will message you as soon as it is confirmed. You can close this page.',
     failedTitle: 'Your payment has failed!',
     failedBody: 'Your order is not confirmed yet. Your cart is saved, so you can try again.',
     failedReason: (reason: string) => `Reason: ${reason}.`,
     failedDebited: 'If any amount was debited, your bank will usually return it within 5 to 7 working days.',
     retry: 'Retry Payment',
+    unconfirmedTitle: 'We could not confirm your payment',
+    unconfirmedBody:
+      'Your payment went through at the bank, but we could not confirm it on our side. Please do not pay again. Contact us with the payment reference below and we will sort it out.',
     amountDue: 'Amount due',
-    refundedTitle: 'This order was refunded',
-    refundedBody: 'The amount has been returned to your original payment method.',
-    notFoundTitle: 'Order not found',
-    notFoundBody: 'We could not find this order in your account.',
+    amountPaid: 'Amount paid',
     orderNumber: 'Order number',
     paymentRef: 'Payment reference',
     date: 'Date',
-    amountPaid: 'Amount paid',
-    deliverTo: 'Deliver to',
-    shipmentStatus: 'Delivery status',
-    tracking: (courier: string, no: string) => `${courier}, tracking number ${no}`,
     redirectIn: (s: number) => `You will be taken to the Students Portal in ${s} second${s === 1 ? '' : 's'}`,
     redirecting: 'Taking you to the Students Portal',
     clickHere: 'Click here',
     clickHereRest: ' if you are not redirected to the Students Portal',
     receipt: 'Print or save receipt',
-    allOrders: 'All my orders',
-    handoffError: 'We could not open the portal just now. Please try again.',
   },
-
-  orders: {
-    title: 'My Orders',
-    empty: 'You have no orders yet.',
-    view: 'View',
-    more: (n: number) => ` + ${n} more`,
-  },
-
-  orderStatus: {
-    CREATED: 'Awaiting payment',
-    PAID: 'Paid',
-    FULFILLED: 'Completed',
-    FAILED: 'Failed',
-    EXPIRED: 'Expired',
-    REFUNDED: 'Refunded',
-  } satisfies Record<OrderStatus, string>,
-  shipmentStatusLabel: {
-    placed: 'Placed',
-    packed: 'Packed',
-    shipped: 'Shipped',
-    delivered: 'Delivered',
-  } satisfies Record<ShipmentStatus, string>,
 
   errors: {
     network: 'We could not reach the server. Check your connection and try again.',
     generic: 'Something went wrong',
-    otp_invalid: 'That passcode is not correct. Please check and try again.',
-    otp_expired: 'That passcode has expired. Please ask for a new one.',
-    otp_locked: 'Too many wrong attempts. Please ask for a new passcode.',
-    rate_limited: 'Too many requests. Wait a minute and try again.',
-    pin_unserviceable: 'We do not deliver books to this pincode yet. Try another address.',
+    server: 'Something went wrong',
     unauthenticated: 'Your session has ended. Please login again.',
-    already_owned: 'You already have everything in this cart.',
     item_unavailable: 'Course selected is invalid or no more available for purchase',
   } as Record<string, string>,
 
