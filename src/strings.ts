@@ -148,6 +148,7 @@ export const t = {
     supportNoteAfter: ' with the payment reference below, and we will get it sorted at the earliest.',
     amountDue: 'Amount due',
     amountPaid: 'Amount paid',
+    track: 'Track on Candidate Portal',
     orderNumber: 'Order number',
     paymentRef: 'Payment reference',
     date: 'Date',

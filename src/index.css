@@ -720,3 +720,6 @@ body { margin: 0; background: var(--bg); }
 .cp-checkout .plan-timeline li.is-failed .plan-timeline-text small { color: var(--bad-ink); font-weight: 700; }
 .cp-checkout .plan-timeline li.is-unconfirmed .plan-timeline-text small { color: #a36700; font-weight: 700; }
 .cp-checkout .plan-timeline-amount { font-size: 12.5px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+
+/* Success screen: onward to the Students Portal */
+.cp-checkout a.track-btn { display: block; margin-top: 18px; text-align: center; text-decoration: none; }

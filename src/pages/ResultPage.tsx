@@ -3,8 +3,8 @@ import { Navigate, useNavigate } from 'react-router'
 import type { CartLine } from '../api'
 import { CartLines, SummaryLines } from '../components/CartLines'
 import { Panel } from '../components/Shell'
-import { SUPPORT_EMAIL, SUPPORT_PHONE } from '../config'
-import { trackPurchaseOnce } from '../lib/analytics'
+import { PORTAL_URL, SUPPORT_EMAIL, SUPPORT_PHONE } from '../config'
+import { track, trackPurchaseOnce } from '../lib/analytics'
 import { forgetCouponCode, rememberCouponCode, saveCart } from '../lib/cart'
 import { formatDate } from '../lib/format'
 import { loadResult, portalUrlFor } from '../lib/result'
@@ -129,6 +129,11 @@ export function ResultPage() {
       />
       <SummaryLines summary={record.summary} totalLabel={t.result.amountPaid} />
       {facts}
+
+      {/* Onward to the page the server named: the test series or course just paid for, or the order. */}
+      <a className="pay-btn track-btn no-print" href={record.portalUrl ?? PORTAL_URL} onClick={() => track('portal_handoff')}>
+        {t.result.track}
+      </a>
 
       <section className="payment-section no-print">
         <button className="text-btn" type="button" onClick={() => window.print()}>

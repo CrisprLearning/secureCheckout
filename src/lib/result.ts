@@ -14,6 +14,8 @@ export interface PaymentRecord {
   orderNumber: string
   /** Razorpay payment ID, once a payment was made. */
   paymentId?: string
+  /** The Students Portal page the server named as the next stop: the test series or course just paid for, or the order. */
+  portalUrl?: string
   /** Why it failed, or what the server said when it could not confirm. */
   reason?: string
   at: string
