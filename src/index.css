@@ -741,4 +741,4 @@ body { margin: 0; background: var(--bg); }
 }
 
 /* Explains the * on an instalment item's "overall fee" */
-.cp-checkout .fee-note { margin: 0 0 10px; text-align: right; font-size: 11.5px; font-weight: 500; color: var(--muted); }
+.cp-checkout .fee-note { margin: 0 0 10px; text-align: left; font-size: 11.5px; font-weight: 500; color: var(--muted); }
