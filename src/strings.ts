@@ -17,7 +17,7 @@ export const t = {
     overallFee: (amount: string) => `overall fee ${amount}`,
     titleFor: 'Payment plan - for',
     payFull: 'Pay Full Amount',
-    payFirst: 'Pay First Installment',
+    payFirst: 'Pay Partial Amount',
     selected: 'Selected',
     close: 'Close',
     colPayment: 'Payment',

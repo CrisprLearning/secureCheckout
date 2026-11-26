@@ -104,6 +104,7 @@ export function CartLines({
   options,
   underPrice,
   planStatus,
+  starOverallFee = false,
 }: {
   lines: CartLine[]
   action?: (line: CartLine) => ReactNode
@@ -115,6 +116,8 @@ export function CartLines({
   underPrice?: (line: CartLine) => ReactNode
   /** After a payment: keeps an instalment schedule behind an info icon, as a timeline whose first step shows how that payment went. */
   planStatus?: PlanStatus
+  /** Marks "overall fee" with a *; the page then explains it (taxes as applicable). */
+  starOverallFee?: boolean
 }) {
   return (
     <div className={`cart-rows ${action ? 'has-action' : ''}`}>
@@ -149,7 +152,12 @@ export function CartLines({
           <div className="cart-price">
             {/* On an instalment plan the row shows what is paid now, with the whole fee beneath. */}
             <span className="price">{formatINR(dueNow(line) * line.number)}</span>
-            {isInstalment(line) && <span className="unit-price">{t.plan.overallFee(formatINR(line.unitPrice * line.number))}</span>}
+            {isInstalment(line) && (
+              <span className="unit-price">
+                {t.plan.overallFee(formatINR(line.unitPrice * line.number))}
+                {starOverallFee && '*'}
+              </span>
+            )}
             {/* The price of one, wherever the row can hold several. */}
             {!isSingle(line) && <span className="unit-price">{t.cart.each(formatINR(line.unitPrice))}</span>}
             {underPrice?.(line)}

@@ -625,6 +625,7 @@ export function CartPage() {
 
         <CartLines
           lines={lines}
+          starOverallFee
           action={(line) => (
             <button
               type="button"
@@ -698,6 +699,9 @@ export function CartPage() {
             })
           }
         />
+
+        {/* Explains the * on "overall fee". */}
+        {onInstalments && <p className="fee-note">{t.plan.taxNote}</p>}
 
         {summary && (
           <div className="coupon-box">
