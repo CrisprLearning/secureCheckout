@@ -35,6 +35,7 @@ Public build-time variables (see `.env.example`); all optional. For deploys, set
 | `/cart?addItem={code}` | Cart, login, billing address, gift code, payment |
 | `/payment` | Result of the last payment: success, failed (with Retry Payment) or paid-but-not-confirmed |
 | `/bridge.html?addItem={code}` | No screen. The main site loads it in a hidden frame to add an item without leaving its page (`src/bridge.ts`) |
+| `/bridge.html?list=1` | No screen. Tells the main site what the cart holds (names, pictures, copies) for its cart dropdown |
 
 ## Flow and API calls
 
