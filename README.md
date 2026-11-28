@@ -34,6 +34,7 @@ Public build-time variables (see `.env.example`); all optional. For deploys, set
 | --- | --- |
 | `/cart?addItem={code}` | Cart, login, billing address, gift code, payment |
 | `/payment` | Result of the last payment: success, failed (with Retry Payment) or paid-but-not-confirmed |
+| `/bridge.html?addItem={code}` | No screen. The main site loads it in a hidden frame to add an item without leaving its page (`src/bridge.ts`) |
 
 ## Flow and API calls
 
@@ -58,6 +59,11 @@ Notes on behaviour:
   to the cart also writes the number of items to the `crisprCartCount` cookie on `.crisprlearning.com`
   (`publishCartCount` in `src/lib/cart.ts`). Copies count: two of one book is 2. An empty cart, or a completed
   purchase, removes the cookie. The main site reads it to badge its cart icon.
+- **Add to cart from the main site.** An Add to Cart button on `crisprlearning.com` loads
+  `/bridge.html?addItem={code}` in a hidden frame. The bridge adds the item as `/cart?addItem=` does and posts the
+  result to the main site (`{ source: 'crispr-checkout', type: 'cart-add', ok, title, added, count }`), which shows
+  a toast and updates its cart icon. It answers only when framed by the main site. If the bridge does not answer,
+  the main site falls back to opening `/cart?addItem={code}`.
 - **Session.** The token from `login.php` is kept in the `crispriteUserToken` cookie (shared with the portal) for 7 days and sent as a
   Bearer token. The APIs report a bad token in the response body (HTTP 200), which logs the student out here.
 - **Coming from the portal.** The portal's Enroll links end in `#u=<mark>`, a short fingerprint of the mobile

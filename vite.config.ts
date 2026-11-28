@@ -23,4 +23,13 @@ function pagesFallbacks(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), pagesFallbacks()],
+  build: {
+    rollupOptions: {
+      // bridge.html is the add-to-cart bridge the main site loads in a hidden frame (src/bridge.ts).
+      input: {
+        main: resolve(import.meta.dirname, 'index.html'),
+        bridge: resolve(import.meta.dirname, 'bridge.html'),
+      },
+    },
+  },
 })

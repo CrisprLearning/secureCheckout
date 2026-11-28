@@ -18,6 +18,7 @@ import {
   clearCheckoutData,
   forgetCouponCode,
   getCouponCode,
+  ITEM_ID,
   MAX_QUANTITY,
   isDelivered,
   missingOption,
@@ -43,7 +44,6 @@ import type { PaymentRecord } from '../lib/result'
 import { useSession } from '../session'
 import { t } from '../strings'
 
-const ITEM_ID = /^[A-Za-z0-9_-]{1,32}$/
 const BILLING_FIELDS = ['fullname', 'address', 'locality', 'city', 'state', 'pincode', 'email'] as const
 const NO_BILLING: Billing = { fullname: '', address: '', locality: '', city: '', state: '', pincode: '', email: '' }
 

@@ -5,6 +5,9 @@
 import type { CartLine, CatalogItem, Summary } from '../api/types'
 import { CART_COUNT_COOKIE, CART_COUNT_DOMAIN } from '../config'
 
+/** What an item code in a link may look like (/cart?addItem=CB001). Anything else is not looked up. */
+export const ITEM_ID = /^[A-Za-z0-9_-]{1,32}$/
+
 const CART_KEY = 'crisprCart'
 const CODE_KEY = 'crisprCartDiscountCode'
 // Pay & Join invites, by course code: { "NEET27": "<token from the link>" }.
