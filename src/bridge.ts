@@ -9,8 +9,9 @@
 //   { type: 'cart-add', ok: true, code, title, added, count }     added is false when a course or test series was already in the cart
 //   { type: 'cart-add', ok: false, code, error, count }           error is an ApiErrorCode
 // With /bridge.html?list=1 it adds nothing and instead reports what the cart holds, for the main site's cart dropdown:
-//   { type: 'cart-list', count, items: [{ code, title, image, quantity, countable }] }
+//   { type: 'cart-list', count, items: [{ code, title, image, quantity, countable, type }] }
 //   countable is true for books and merchandise, the only items that can have more than one copy.
+//   type is what the item is, for display: 'Book', 'Merchandise', 'Course', 'Test Series'.
 // The count is also in the crisprCartCount cookie (src/lib/cart.ts), which the main site reads for its cart icon.
 
 import { api, ApiError } from './api'
@@ -55,6 +56,7 @@ async function run() {
         image: line.displayImage ?? '',
         quantity: line.number,
         countable: isDelivered(line),
+        type: line.isBook ? 'Book' : line.isMerch ? 'Merchandise' : (line.type ?? ''),
       })),
     })
     return
