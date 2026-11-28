@@ -116,6 +116,7 @@ export function CartPage() {
   const [cart, setCart] = useState<CartLine[]>([])
   const [verified, setVerified] = useState<VerifiedCart | null>(null)
   const [removing, setRemoving] = useState<CartLine | null>(null)
+  const [clearing, setClearing] = useState(false)
   // The tick beside the terms. Kept for the tab, so "Retry Payment" does not ask for it again.
   const [agreed, setAgreed] = useState(() => {
     try {
@@ -296,6 +297,14 @@ export function CartPage() {
 
   function removeOwned() {
     for (const line of owned) removeFromCart(rowId(line))
+    setOwned([])
+    void revalidate()
+  }
+
+  // Empties the cart; the page then shows its empty-cart screen.
+  function clearAll() {
+    for (const line of retrieveCart()) removeFromCart(rowId(line))
+    setClearing(false)
     setOwned([])
     void revalidate()
   }
@@ -651,7 +660,14 @@ export function CartPage() {
       </div>
 
       <section className="summary-section">
-        <h2>{t.cart.summaryTitle}</h2>
+        <div className="summary-head">
+          <h2>{t.cart.summaryTitle}</h2>
+          {lines.length > 0 && (
+            <button type="button" className="text-btn clear-all" onClick={() => setClearing(true)} disabled={busy}>
+              {t.cart.clearAll}
+            </button>
+          )}
+        </div>
 
         <CartLines
           lines={lines}
@@ -941,6 +957,31 @@ export function CartPage() {
             <div className="modal-actions">
               <button type="button" className="apply-btn is-primary" onClick={removeOwned} autoFocus>
                 {owned.length === 1 ? t.cart.ownedRemoveOne : t.cart.ownedRemoveMany}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {clearing && (
+        <div className="modal-backdrop" onClick={() => setClearing(false)}>
+          <div
+            className="modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="clear-title"
+            aria-describedby="clear-body"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.key === 'Escape' && setClearing(false)}
+          >
+            <h2 id="clear-title">{t.cart.clearTitle}</h2>
+            <p id="clear-body">{t.cart.clearBody}</p>
+            <div className="modal-actions">
+              <button type="button" className="apply-btn" onClick={() => setClearing(false)} autoFocus>
+                {t.cart.clearCancel}
+              </button>
+              <button type="button" className="apply-btn is-danger" onClick={clearAll}>
+                {t.cart.clearAll}
               </button>
             </div>
           </div>
