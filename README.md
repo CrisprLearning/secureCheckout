@@ -54,6 +54,10 @@ Notes on behaviour:
 - **Cart.** Kept in `localStorage` (`src/lib/cart.ts`) in the portal's format; it can hold several items, one each
   of a course or test series. The server rejects a cart whose stored prices differ from its catalogue; the app
   then refreshes the lines from the catalogue and prices it once more.
+- **Cart count for the main site.** `crisprlearning.com` cannot read this site's `localStorage`, so every change
+  to the cart also writes the number of items to the `crisprCartCount` cookie on `.crisprlearning.com`
+  (`publishCartCount` in `src/lib/cart.ts`). Copies count: two of one book is 2. An empty cart, or a completed
+  purchase, removes the cookie. The main site reads it to badge its cart icon.
 - **Session.** The token from `login.php` is kept in the `crispriteUserToken` cookie (shared with the portal) for 7 days and sent as a
   Bearer token. The APIs report a bad token in the response body (HTTP 200), which logs the student out here.
 - **Coming from the portal.** The portal's Enroll links end in `#u=<mark>`, a short fingerprint of the mobile

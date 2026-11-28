@@ -3,6 +3,7 @@
 // The server checks every stored price against its catalogue before it prices or charges anything.
 
 import type { CartLine, CatalogItem, Summary } from '../api/types'
+import { CART_COUNT_COOKIE, CART_COUNT_DOMAIN } from '../config'
 
 const CART_KEY = 'crisprCart'
 const CODE_KEY = 'crisprCartDiscountCode'
@@ -22,6 +23,30 @@ function write(key: string, value: string) {
     localStorage.setItem(key, value)
   } catch {
     // Storage blocked: the cart lasts for this page view only.
+  }
+}
+
+/** How many things are in the cart: every copy of a book or merchandise item counts. */
+export const cartCount = (lines: CartLine[]) =>
+  lines.reduce((total, line) => total + (Number.isFinite(line.number) && line.number > 0 ? Math.round(line.number) : 1), 0)
+
+/**
+ * Tells the main site how many items the cart holds, in the `crisprCartCount` cookie. On crisprlearning.com
+ * the cookie is set for the whole domain, so pages on crisprlearning.com can show the number on their cart
+ * icon; on any other host (localhost) it stays on that host. An empty cart removes the cookie.
+ */
+function publishCartCount(lines: CartLine[]) {
+  try {
+    const shared = window.location.hostname.endsWith(CART_COUNT_DOMAIN.replace(/^\./, ''))
+    const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+    const scope = `; path=/; SameSite=Lax${secure}${shared ? `; domain=${CART_COUNT_DOMAIN}` : ''}`
+    const count = cartCount(lines)
+    document.cookie =
+      count > 0
+        ? `${CART_COUNT_COOKIE}=${count}; max-age=${365 * 24 * 60 * 60}${scope}`
+        : `${CART_COUNT_COOKIE}=; expires=Thu, 01 Jan 1970 00:00:00 UTC${scope}`
+  } catch {
+    // Cookies blocked: the main site shows no number.
   }
 }
 
@@ -70,7 +95,11 @@ export function retrieveCart(): CartLine[] {
 
 export function saveCart(lines: CartLine[]) {
   write(CART_KEY, JSON.stringify(lines))
+  publishCartCount(lines)
 }
+
+// A cart saved before the count was published, or changed in another tab, is published when the site loads.
+publishCartCount(retrieveCart())
 
 /**
  * Adds an item, with the picks named in the link if any. An item already in the cart with the same picks
@@ -220,4 +249,5 @@ export function clearCheckoutData() {
   } catch {
     // Nothing to clear.
   }
+  publishCartCount([])
 }
