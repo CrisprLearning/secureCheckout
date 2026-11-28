@@ -26,6 +26,8 @@ import {
   setPlan,
   rememberCouponCode,
   removeFromCart,
+  inviteTokenFor,
+  rememberInvite,
   retrieveCart,
   rowId,
   saveCart,
@@ -87,6 +89,7 @@ async function refreshFromCatalogue(lines: CartLine[]): Promise<{ lines: CartLin
           choices: item.options,
           plans: item.plans,
           commencement: item.commencement,
+          inviteOnly: item.inviteOnly || undefined,
         }
       } catch (err) {
         if (err instanceof ApiError && err.code === 'item_unavailable') return null
@@ -108,6 +111,8 @@ export function CartPage() {
   const { student, setStudent } = useSession()
   const [ready, setReady] = useState(false)
   const [invalidItem, setInvalidItem] = useState(false)
+  // Why an invite-only course was not added: no invite in the link, or one that no longer works.
+  const [inviteProblem, setInviteProblem] = useState('')
   const [cart, setCart] = useState<CartLine[]>([])
   const [verified, setVerified] = useState<VerifiedCart | null>(null)
   const [removing, setRemoving] = useState<CartLine | null>(null)
@@ -158,6 +163,28 @@ export function CartPage() {
         if (!ITEM_ID.test(addItem)) throw new ApiError('item_unavailable')
         // The catalogue decides the title, type, price and options.
         const item = await api.lookupItem(addItem)
+        if (item.inviteOnly) {
+          // "Join Upon Invite Only": the course joins the cart only through a Pay & Join link (&invite=...)
+          // that still works. Whose invite it is gets checked by the server once the candidate logs in.
+          const token = params.get('invite') ?? ''
+          const invite = token ? await api.getInvite(token) : null
+          const problem = !invite
+            ? t.cart.inviteOnly
+            : invite.status === 'expired'
+              ? t.cart.inviteExpired
+              : invite.status === 'used'
+                ? t.cart.inviteUsed
+                : invite.status !== 'valid' || invite.courseCode !== item.code
+                  ? t.cart.inviteInvalid
+                  : ''
+          if (problem) {
+            setInviteProblem(problem)
+            toast(problem)
+            navigate('/cart', { replace: true })
+            return true
+          }
+          rememberInvite(item.code, token)
+        }
         // &selection=M picks the item's option (its size); a value the item does not offer is ignored.
         addToCart(item, params.get('selection'))
         track('view_cart', { item_id: item.code, item_type: item.type })
@@ -191,7 +218,7 @@ export function CartPage() {
         const wanted = getCouponCode()
         let res: VerifiedCart
         try {
-          res = await api.validateCart(forServer(lines), wanted)
+          res = await api.validateCart(forServer(lines), wanted, inviteTokenFor(lines))
         } catch (err) {
           // The server rejects the whole cart when a stored price is stale or an item was withdrawn.
           // Refresh from the catalogue and try once more before giving up.
@@ -204,7 +231,7 @@ export function CartPage() {
           setCart(lines)
           toast(fresh.removed ? t.cart.itemsRemoved : t.cart.pricesUpdated)
           if (lines.length === 0) return setVerified(null)
-          res = await api.validateCart(forServer(lines), wanted)
+          res = await api.validateCart(forServer(lines), wanted, inviteTokenFor(lines))
         }
         // The server's totals with our own lines, which also carry the pictures.
         const ownedIds = new Set((res.alreadyPurchased ?? []).map((item) => item.itemId))
@@ -400,6 +427,7 @@ export function CartPage() {
         discountCode,
         billing: Object.fromEntries(BILLING_FIELDS.map((f) => [f, billing[f].trim()])) as unknown as Billing,
         mobile: student.mobile,
+        inviteToken: inviteTokenFor(items),
       })
 
       const result = await openRazorpay(order, {
@@ -467,7 +495,9 @@ export function CartPage() {
 
   if (cart.length === 0) {
     // An unknown or withdrawn item reads differently from a cart that is simply empty.
-    return invalidItem ? (
+    return inviteProblem ? (
+      <EmptyState title={t.cart.inviteOnlyTitle} body={inviteProblem} />
+    ) : invalidItem ? (
       <EmptyState title={t.cart.invalidTitle} body={t.cart.invalidBody} />
     ) : (
       <EmptyState title={t.cart.emptyTitle} body={t.cart.emptyBody} />

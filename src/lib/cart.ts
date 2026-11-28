@@ -6,6 +6,8 @@ import type { CartLine, CatalogItem, Summary } from '../api/types'
 
 const CART_KEY = 'crisprCart'
 const CODE_KEY = 'crisprCartDiscountCode'
+// Pay & Join invites, by course code: { "NEET27": "<token from the link>" }.
+const INVITES_KEY = 'crisprCartInvites'
 
 function read(key: string): string {
   try {
@@ -98,6 +100,7 @@ export function addToCart(item: CatalogItem, selection: string | null = null): C
       // The plan with priority 1 is selected to begin with; the catalogue lists plans in priority order.
       ...(item.plans.length > 0 ? { plan: item.plans[0].type } : {}),
       commencement: item.commencement,
+      ...(item.inviteOnly ? { inviteOnly: true } : {}),
       ...(picks ? { options: picks } : {}),
     })
   }
@@ -185,10 +188,35 @@ export const getCouponCode = () => read(CODE_KEY)
 export const rememberCouponCode = (code: string) => write(CODE_KEY, code)
 export const forgetCouponCode = () => write(CODE_KEY, '')
 
+function invites(): Record<string, string> {
+  try {
+    const parsed: unknown = JSON.parse(read(INVITES_KEY) || '{}')
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, string>) : {}
+  } catch {
+    return {}
+  }
+}
+
+/** Keeps the invite an invite-only course was opened with, so it can go to the server with the cart. */
+export function rememberInvite(courseCode: string, token: string) {
+  write(INVITES_KEY, JSON.stringify({ ...invites(), [courseCode]: token }))
+}
+
+/** The invite of the invite-only course in the cart, or '' when there is none. */
+export function inviteTokenFor(lines: CartLine[]): string {
+  const kept = invites()
+  for (const line of lines) {
+    const token = line.inviteOnly ? kept[line.itemId] : undefined
+    if (typeof token === 'string' && token) return token
+  }
+  return ''
+}
+
 export function clearCheckoutData() {
   try {
     localStorage.removeItem(CART_KEY)
     localStorage.removeItem(CODE_KEY)
+    localStorage.removeItem(INVITES_KEY)
   } catch {
     // Nothing to clear.
   }

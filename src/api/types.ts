@@ -45,6 +45,19 @@ export interface CatalogItem {
   commencement?: string
   /** Display names of this item's taxes and extra charges, by charge code (for example SHIPPING: 'Delivery Charges'). */
   chargeLabels: Record<string, string>
+  /** "Join Upon Invite Only": sold only through the Pay & Join link the team sends a selected student. */
+  inviteOnly: boolean
+}
+
+/**
+ * A Pay & Join invite, as public/admission-invite.php describes it before login: what the link is worth
+ * and for which course, never who it was sent to. Whether the logged-in candidate may use it is the
+ * server's call when it prices the cart.
+ */
+export interface Invite {
+  status: 'valid' | 'expired' | 'used' | 'invalid'
+  /** The catalogue code of the course the invite is for; '' when the link is unknown. */
+  courseCode: string
 }
 
 /**
@@ -71,6 +84,8 @@ export interface CartLine {
   commencement?: string
   /** The type of the plan the buyer picked. Sent with the order; the server works out what is charged. */
   plan?: string
+  /** An invite-only course: the invite it was added with goes to the server with the cart. */
+  inviteOnly?: boolean
 }
 
 /** A tax or extra charge of the order. `items` is how much each cart item adds to it, when the server sends the split. */

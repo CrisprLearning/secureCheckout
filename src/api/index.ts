@@ -1,6 +1,7 @@
 // Client for the Crispr candidate APIs: the PHP scripts the candidate portal's checkout already uses.
 //
 //   public/courses.php?code=            catalogue lookup
+//   public/admission-invite.php?token=  what a Pay & Join invite link is worth
 //   user/authenticate.php               send the one-time passcode
 //   user/login.php                      verify it and receive the session token
 //   user/get-billing-address.php        who is logged in, and their last billing address
@@ -13,7 +14,7 @@
 import { API_BASE_URL, PORTAL_URL } from '../config'
 import { clearToken, getToken, setToken } from '../lib/auth'
 import { ApiError } from './types'
-import type { Billing, CartLine, CatalogItem, PaymentOrder, PaymentProof, Student, VerifiedCart } from './types'
+import type { Billing, CartLine, CatalogItem, Invite, PaymentOrder, PaymentProof, Student, VerifiedCart } from './types'
 
 export { ApiError } from './types'
 export type * from './types'
@@ -172,20 +173,39 @@ export const api = {
       plans,
       commencement: clean(details.commencement) || undefined,
       chargeLabels,
+      inviteOnly: d.inviteOnly === true,
+    }
+  },
+
+  /** What a Pay & Join invite link is worth. An unknown or malformed link comes back as 'invalid'. */
+  async getInvite(token: string): Promise<Invite> {
+    const res = await call(`/public/admission-invite.php?token=${encodeURIComponent(token)}`, { auth: false, method: 'GET' })
+    const d = (res.data ?? {}) as { status?: unknown; course?: { code?: unknown } | null }
+    const status = clean(d.status)
+    return {
+      status: status === 'valid' || status === 'expired' || status === 'used' ? status : 'invalid',
+      courseCode: clean(d.course?.code),
     }
   },
 
   /** Prices the cart for the logged-in candidate: discount, taxes, extras and the total to pay. */
-  async validateCart(cart: CartLine[], discountCode: string): Promise<VerifiedCart> {
-    const res = await call('/user/checkout/validate-user-cart.php', { body: { cart, code: discountCode } })
+  async validateCart(cart: CartLine[], discountCode: string, inviteToken = ''): Promise<VerifiedCart> {
+    // inviteToken: the Pay & Join invite an invite-only course in the cart was added with. The server
+    // refuses the cart when the invite is not the logged-in candidate's, has expired or was used.
+    const res = await call('/user/checkout/validate-user-cart.php', { body: { cart, code: discountCode, ...(inviteToken ? { inviteToken } : {}) } })
     return res.data as VerifiedCart
   },
 
   /** Creates the order on the server, which computes the amount itself and opens a Razorpay order for it. */
-  async createOrder(req: { cart: CartLine[]; discountCode: string; billing: Billing; mobile: string }): Promise<PaymentOrder> {
+  async createOrder(req: { cart: CartLine[]; discountCode: string; billing: Billing; mobile: string; inviteToken?: string }): Promise<PaymentOrder> {
     const { fullname, ...address } = req.billing
     const res = await call('/user/checkout/process-purchase.php', {
-      body: { cart: req.cart, discountCode: req.discountCode, billingAddress: { mobile: req.mobile, name: fullname, ...address } },
+      body: {
+        cart: req.cart,
+        discountCode: req.discountCode,
+        billingAddress: { mobile: req.mobile, name: fullname, ...address },
+        ...(req.inviteToken ? { inviteToken: req.inviteToken } : {}),
+      },
     })
     const d = (res.data ?? {}) as Record<string, unknown>
     if (!d.key || !d.order) throw new ApiError('server')
